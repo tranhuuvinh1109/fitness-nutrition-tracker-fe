@@ -23,6 +23,6 @@ const Progress = ({
       />
     </ProgressPrimitive.Root>
   );
-}
+};
 
 export { Progress };

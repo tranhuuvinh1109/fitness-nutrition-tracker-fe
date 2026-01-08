@@ -1,4 +1,5 @@
 "use client";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { createContext, useContext, useState, ReactNode } from "react";
 
 type UserRole = "admin" | "user" | null;
@@ -23,7 +24,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     email: "admin@gmail.com",
   });
 
-  return <AppContext.Provider value={{ user, setUser }}>{children}</AppContext.Provider>;
+  return (
+    <AppContext.Provider value={{ user, setUser }}>
+      <MainLayout>{children}</MainLayout>
+    </AppContext.Provider>
+  );
 };
 
 export const useApp = () => {

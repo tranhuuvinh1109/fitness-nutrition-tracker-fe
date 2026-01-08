@@ -12,7 +12,7 @@ const Card = ({ className, ...props }: React.ComponentProps<"div">) => {
       {...props}
     />
   );
-}
+};
 
 const CardHeader = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
@@ -25,17 +25,17 @@ const CardHeader = ({ className, ...props }: React.ComponentProps<"div">) => {
       {...props}
     />
   );
-}
+};
 
 const CardTitle = ({ className, ...props }: React.ComponentProps<"div">) => {
   return <h4 data-slot="card-title" className={cn("leading-none", className)} {...props} />;
-}
+};
 
 const CardDescription = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <p data-slot="card-description" className={cn("text-muted-foreground", className)} {...props} />
   );
-}
+};
 
 const CardAction = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
@@ -45,7 +45,7 @@ const CardAction = ({ className, ...props }: React.ComponentProps<"div">) => {
       {...props}
     />
   );
-}
+};
 
 const CardContent = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
@@ -55,7 +55,7 @@ const CardContent = ({ className, ...props }: React.ComponentProps<"div">) => {
       {...props}
     />
   );
-}
+};
 
 const CardFooter = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
@@ -65,6 +65,6 @@ const CardFooter = ({ className, ...props }: React.ComponentProps<"div">) => {
       {...props}
     />
   );
-}
+};
 
 export { Card, CardHeader, CardFooter, CardTitle, CardAction, CardDescription, CardContent };

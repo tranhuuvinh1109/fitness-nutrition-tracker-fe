@@ -1,47 +1,27 @@
 "use client";
 
-import { HEADERS } from "@/constants";
-import { MessageCircle, TextAlignJustify, X } from "lucide-react";
-import Link from "next/link";
-import { useState } from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Dumbbell, LogOut } from "lucide-react";
+import { Button } from "../ui";
 
 export const Header = () => {
-  const [isOpen, setIsOpen] = useState(false);
   return (
-    <header>
-      <div className="hidden items-center gap-4 md:flex">
-        <MessageCircle className="h-10 w-10 text-[#0A4FD5]" />
-        {HEADERS.map((item) => (
-          <Link
-            href={item.href}
-            key={item.href}
-            className="px-4 py-2 text-base font-medium hover:text-[#0A4FD5]"
-          >
-            {item.label}
-          </Link>
-        ))}
-      </div>
-      <div className="flex justify-end md:hidden">
-        <Popover onOpenChange={(open) => setIsOpen(open)}>
-          <PopoverTrigger>
-            <button className="rounded bg-[#0A4FD5] px-3 py-2 text-white">
-              {isOpen ? <X className="h-5 w-5" /> : <TextAlignJustify className="h-5 w-5" />}
-            </button>
-          </PopoverTrigger>
-
-          <PopoverContent className="flex w-56 flex-col gap-4">
-            {HEADERS.map((item) => (
-              <Link
-                href={item.href}
-                key={item.href}
-                className="px-2.5 py-1 text-base font-medium hover:text-[#0A4FD5]"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </PopoverContent>
-        </Popover>
+    <header className="bg-background sticky top-0 z-10 border-b">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Dumbbell className="text-primary h-8 w-8" />
+            <h1 className="text-2xl">FitTracker AI</h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-muted-foreground hidden text-sm sm:inline">
+              {"user"} • {"58"}kg
+            </span>
+            <Button variant="ghost" size="sm">
+              <LogOut className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Đăng xuất</span>
+            </Button>
+          </div>
+        </div>
       </div>
     </header>
   );

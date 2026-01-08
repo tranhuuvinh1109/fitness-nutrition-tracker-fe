@@ -1,104 +1,245 @@
-import { Header } from "@/components/header";
-import { MessageCircle, Search, Send, User } from "lucide-react";
+"use client";
+import React from "react";
+
+import {
+  Flame,
+  Target,
+  TrendingDown,
+  TrendingUp,
+  Droplet,
+  Clock,
+  Apple,
+  Dumbbell,
+} from "lucide-react";
+import { DailyStats, CalorieRequirements, UserProfile } from "@/types";
+import { getDailyStats } from "@/lib/utils/storage";
+import { calculateCalorieRequirements } from "@/lib/utils/calculations";
+import {
+  Button,
+  Progress,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui";
+import { generateMotivationalMessage } from "@/lib/utils/aiCoach";
 import Link from "next/link";
 
-interface HomeProps {
-  //   onNavigate: (page: string) => void;
-  user?: { email: string; name: string; role: "user" | "admin" } | null;
-}
+export function HomePage() {
+  const profile: UserProfile = {
+    id: "user123",
+    age: 28,
+    gender: "male",
+    weight: 75,
+    height: 180,
+    activityLevel: "sedentary",
+    goal: "lose-weight",
+    createdAt: "",
+    updatedAt: "",
+  };
+  const today = new Date().toISOString().split("T")[0];
+  const [stats, setStats] = React.useState<DailyStats>(getDailyStats(today));
+  const [requirements, setRequirements] = React.useState<CalorieRequirements>(
+    calculateCalorieRequirements(profile)
+  );
 
-export const HomePage = ({ user }: HomeProps) => {
-  console.log("User on HomePage:", user);
+  React.useEffect(() => {
+    // Refresh stats every minute
+    const interval = setInterval(() => {
+      setStats(getDailyStats(today));
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [today]);
+
+  const caloriesRemaining = requirements.targetCalories - stats.caloriesIn + stats.caloriesOut;
+  const caloriesProgress =
+    ((stats.caloriesIn - stats.caloriesOut) / requirements.targetCalories) * 100;
+  const proteinProgress = (stats.protein / requirements.proteinGrams) * 100;
+  const waterProgress = (stats.water / 2500) * 100; // Target 2.5L
+
+  const motivationMessage = generateMotivationalMessage(profile, stats);
+
   return (
-    <div className="min-h-screen bg-[#F3F4F6]">
-      {/* Hero Section */}
-      <div className="bg-white shadow-sm">
-        <div className="mx-auto max-w-[1440px] px-8 py-6">
-          <Header />
-        </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1>Bảng điều khiển</h1>
+        <p className="text-muted-foreground">
+          Chào {profile.gender === "male" ? "anh" : "chị"}! {motivationMessage}
+        </p>
       </div>
 
-      {/* Hero Content */}
-      <div className="mx-auto px-4 py-8 md:max-w-[1440px] md:px-8 md:py-16">
-        <div className="flex w-full flex-col items-center justify-between gap-12 md:flex-row">
-          <div className="md:max-w-[680px] md:flex-1">
-            <h1 className="mb-6 text-[#111827]">AI hỗ trợ tư vấn thủ tục hành chính 24/7</h1>
-            <p className="mb-12 text-[#111827] opacity-80">
-              Giải đáp hồ sơ, giấy tờ, quy trình hành chính nhanh chóng và chính xác.
+      {/* Main Stats Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm">Calo còn lại</CardTitle>
+            <Flame className="h-4 w-4 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl">{Math.max(0, Math.round(caloriesRemaining))}</div>
+            <p className="text-muted-foreground text-xs">
+              Mục tiêu: {requirements.targetCalories} kcal
             </p>
-            <div className="flex flex-wrap gap-4">
-              <input
-                type="text"
-                placeholder="Ví dụ: Thủ tục đăng ký kinh doanh cần gì?"
-                className="flex-1 rounded-lg border border-gray-300 bg-white px-6 py-4 focus:border-[#0A4FD5] focus:outline-none"
+            <Progress value={Math.min(100, Math.max(0, caloriesProgress))} className="mt-2" />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm">Protein</CardTitle>
+            <Apple className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl">{Math.round(stats.protein)}g</div>
+            <p className="text-muted-foreground text-xs">Mục tiêu: {requirements.proteinGrams}g</p>
+            <Progress value={Math.min(100, proteinProgress)} className="mt-2" />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm">Nước uống</CardTitle>
+            <Droplet className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl">{(stats.water / 1000).toFixed(1)}L</div>
+            <p className="text-muted-foreground text-xs">Mục tiêu: 2.5L</p>
+            <Progress value={Math.min(100, waterProgress)} className="mt-2" />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm">Vận động</CardTitle>
+            <Dumbbell className="h-4 w-4 text-purple-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl">{stats.workoutMinutes} phút</div>
+            <p className="text-muted-foreground text-xs">Đốt cháy: {stats.caloriesOut} kcal</p>
+            <Progress value={Math.min(100, (stats.workoutMinutes / 60) * 100)} className="mt-2" />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Calorie Balance */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Cân bằng Calo hôm nay</CardTitle>
+          <CardDescription>Tổng quan về calo nạp vào và tiêu thụ</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-green-500" />
+                <span>Calo nạp vào</span>
+              </div>
+              <span className="text-xl">{stats.caloriesIn} kcal</span>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <TrendingDown className="h-5 w-5 text-red-500" />
+                <span>Calo đốt cháy</span>
+              </div>
+              <span className="text-xl">{stats.caloriesOut} kcal</span>
+            </div>
+
+            <div className="flex items-center justify-between border-t pt-4">
+              <div className="flex items-center gap-2">
+                <Target className="h-5 w-5 text-blue-500" />
+                <span>Chênh lệch</span>
+              </div>
+              <span className="text-xl">{stats.caloriesIn - stats.caloriesOut} kcal</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Macros Breakdown */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Dinh dưỡng hôm nay</CardTitle>
+          <CardDescription>Phân bổ Protein, Carbs, Fat</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span>Protein</span>
+                <span>
+                  {Math.round(stats.protein)}g / {requirements.proteinGrams}g
+                </span>
+              </div>
+              <Progress value={Math.min(100, proteinProgress)} className="h-2" />
+            </div>
+
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span>Carbs</span>
+                <span>
+                  {Math.round(stats.carbs)}g / {requirements.carbsGrams}g
+                </span>
+              </div>
+              <Progress
+                value={Math.min(100, (stats.carbs / requirements.carbsGrams) * 100)}
+                className="h-2"
               />
-              <button
-                // onClick={() => onNavigate("chat")}
-                className="flex items-center gap-2 rounded-lg bg-[#3DDC84] px-8 py-4 text-[#111827] transition-colors hover:bg-[#2ac972]"
-              >
-                <Send className="h-5 w-5" />
-                Trò chuyện ngay
-              </button>
+            </div>
+
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span>Fat</span>
+                <span>
+                  {Math.round(stats.fat)}g / {requirements.fatGrams}g
+                </span>
+              </div>
+              <Progress
+                value={Math.min(100, (stats.fat / requirements.fatGrams) * 100)}
+                className="h-2"
+              />
             </div>
           </div>
-          <div className="flex h-[360px] w-full flex-1 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0A4FD5]/10 to-[#3DDC84]/10 py-8 md:max-w-[560px] md:py-0">
-            <div className="text-center">
-              <MessageCircle className="mx-auto mb-4 h-16 w-16 text-[#0A4FD5] opacity-50 md:h-32 md:w-32" />
-              <div className="text-[#111827] opacity-60">Robot AI</div>
-            </div>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Features Section */}
-      <div className="mx-auto max-w-[1440px] px-8 py-12">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-          <Link
-            href={"thu-tuc"}
-            className="cursor-pointer rounded-xl bg-white p-8 shadow-sm transition-shadow hover:shadow-md"
-          >
-            <Search className="mb-4 h-12 w-12 text-[#0A4FD5]" />
-            <h3 className="mb-2 text-[#111827]">Tra cứu thủ tục</h3>
-            <p className="text-[#111827] opacity-70">Tìm nhanh thủ tục theo từ khóa</p>
-          </Link>
-          <Link
-            href={"chat"}
-            className="cursor-pointer rounded-xl bg-white p-8 shadow-sm transition-shadow hover:shadow-md"
-          >
-            <MessageCircle className="mb-4 h-12 w-12 text-[#0A4FD5]" />
-            <h3 className="mb-2 text-[#111827]">Chat với AI</h3>
-            <p className="text-[#111827] opacity-70">
-              Nhận hướng dẫn chi tiết cho trường hợp của bạn
-            </p>
-          </Link>
-          <Link
-            href={"tai-khoan"}
-            className="cursor-pointer rounded-xl bg-white p-8 shadow-sm transition-shadow hover:shadow-md"
-          >
-            <User className="mb-4 h-12 w-12 text-[#0A4FD5]" />
-            <h3 className="mb-2 text-[#111827]">Quản lý tài khoản</h3>
-            <p className="text-[#111827] opacity-70">Lưu thủ tục yêu thích và theo dõi lịch sử</p>
-          </Link>
-        </div>
-      </div>
+      {/* Quick Actions */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Link
+          href={"nutrition"}
+          className="hover:border-primary bg-card text-card-foreground flex cursor-pointer flex-col gap-6 rounded-xl border transition-colors"
+        >
+          <CardHeader>
+            <CardTitle>Ghi nhận bữa ăn</CardTitle>
+            <CardDescription>Thêm món ăn bằng AI hoặc tìm kiếm</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button className="w-full">
+              <Apple className="mr-2 h-4 w-4" />
+              Thêm món ăn
+            </Button>
+          </CardContent>
+        </Link>
 
-      {/* Footer */}
-      <div className="mt-20 bg-white">
-        <div className="mx-auto max-w-[1440px] px-8 py-8">
-          <div className="mb-4 text-[#111827] opacity-70">
-            Liên hệ | Điều khoản | Chính sách bảo mật
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="text-[#111827] opacity-50">© 2025 GovAssist AI</div>
-            <button
-              //   onClick={() => onNavigate("mobile")}
-              className="text-sm text-[#0A4FD5] hover:underline"
-            >
-              Xem giao diện mobile →
-            </button>
-          </div>
-        </div>
+        <Link
+          href={"workout"}
+          className="hover:border-primary bg-card text-card-foreground flex cursor-pointer flex-col gap-6 rounded-xl border transition-colors"
+        >
+          <CardHeader>
+            <CardTitle>Ghi nhận tập luyện</CardTitle>
+            <CardDescription>Thêm hoạt động thể chất</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button className="w-full">
+              <Dumbbell className="mr-2 h-4 w-4" />
+              Thêm bài tập
+            </Button>
+          </CardContent>
+        </Link>
       </div>
     </div>
   );
-};
+}

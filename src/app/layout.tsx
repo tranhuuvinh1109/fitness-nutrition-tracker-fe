@@ -10,9 +10,7 @@ export const metadata: Metadata = {
   title: "Tra Cứu Văn Bản Pháp Luật",
   description: "Search and retrieve updated legal documents and regulations",
 };
-
-type TProps = Readonly<IChildren>;
-const RootLayout: FC<TProps> = ({ children }) => (
+const RootLayout: FC<{ children: React.ReactNode }> = ({ children }) => (
   <html lang="en">
     <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
       <AppProvider>{children}</AppProvider>
