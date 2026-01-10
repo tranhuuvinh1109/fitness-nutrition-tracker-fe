@@ -86,3 +86,5 @@ export interface CalorieRequirements {
   carbsGrams: number;
   fatGrams: number;
 }
+
+export * from "./user.type";

@@ -5,3 +5,6 @@ export * from "./useMobile";
 export * from "./imageWithFallback";
 export * from "./progress";
 export * from "./card";
+export * from "./label";
+export * from "./tabs";
+export * from "./formInput";
