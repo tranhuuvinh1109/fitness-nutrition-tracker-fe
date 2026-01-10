@@ -30,7 +30,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const { data, error, isLoading } = useGetUserInfo();
 
   const logout = () => {
-    localStorage.removeItem(E_LOCAL_STORAGE.APP_NAME);
+    // localStorage.removeItem(E_LOCAL_STORAGE.APP_NAME);
     router.replace("/auth");
     toast.error("Vui lòng đăng nhập để sử dụng ứng dụng.", {
       id: "auth-required",

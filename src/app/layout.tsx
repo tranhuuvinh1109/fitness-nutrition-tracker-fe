@@ -7,8 +7,8 @@ import type { Metadata } from "next";
 import { AppProvider, TanstackProvider } from "@/providers";
 
 export const metadata: Metadata = {
-  title: "Tra Cứu Văn Bản Pháp Luật",
-  description: "Search and retrieve updated legal documents and regulations",
+  title: "AI",
+  description: "AI",
 };
 const RootLayout: FC<{ children: React.ReactNode }> = ({ children }) => (
   <html lang="en">
