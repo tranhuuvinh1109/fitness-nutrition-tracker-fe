@@ -8,3 +8,4 @@ export * from "./card";
 export * from "./label";
 export * from "./tabs";
 export * from "./formInput";
+export * from "./loading";

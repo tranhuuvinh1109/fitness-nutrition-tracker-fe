@@ -19,7 +19,11 @@ export type LoginReponseDataType = {
 };
 export type LoginReponseType = ApiReponseType<LoginReponseDataType>;
 
-export type GetUserInfoDataType = UserInfoType;
+export type GetUserInfoDataType = {
+  access_token: string;
+  user: UserInfoType;
+  refresh_token: string;
+};
 export type GetUserInfoReponseType = ApiReponseType<GetUserInfoDataType>;
 
 export type RegisterGuestTokenDataType = {

@@ -17,12 +17,12 @@ import { Apple, Bot, Dumbbell, Home, TrendingUp, User } from "lucide-react";
 // ];
 
 export const HEADERS = [
-  { id: "dashboard", label: "Trang chủ", icon: Home },
-  { id: "nutrition", label: "Dinh dưỡng", icon: Apple },
-  { id: "workout", label: "Tập luyện", icon: Dumbbell },
-  { id: "coach", label: "AI Coach", icon: Bot },
-  { id: "progress", label: "Tiến độ", icon: TrendingUp },
-  { id: "profile", label: "Hồ sơ", icon: User },
+  { id: "dashboard", label: "Trang chủ", icon: Home, href: "/" },
+  { id: "nutrition", label: "Dinh dưỡng", icon: Apple, href: "/nutrition" },
+  { id: "workout", label: "Tập luyện", icon: Dumbbell, href: "/workout" },
+  { id: "coach", label: "AI Coach", icon: Bot, href: "/coach" },
+  { id: "progress", label: "Tiến độ", icon: TrendingUp, href: "/progress" },
+  { id: "profile", label: "Hồ sơ", icon: User, href: "/profile" },
 ];
 
 export const HEADER_PATH_HIDE = ["/auth"];
