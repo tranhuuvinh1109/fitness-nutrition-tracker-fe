@@ -1,3 +1,4 @@
+import { E_WORKOUT_STATUS } from "@/enums";
 import { UserProfile, CalorieRequirements } from "../../types";
 
 export const calculateBMR = (profile: UserProfile): number => {
@@ -118,3 +119,29 @@ export const getGoalLabel = (goal: string): string => {
   };
   return labels[goal] || goal;
 };
+
+export function getStatusLabel(status: E_WORKOUT_STATUS): string {
+  switch (status) {
+    case E_WORKOUT_STATUS.PLANNED:
+      return "Đã lên lịch";
+    case E_WORKOUT_STATUS.COMPLETED:
+      return "Đã hoàn thành";
+    case E_WORKOUT_STATUS.SKIPPED:
+      return "Đã bỏ qua";
+    default:
+      return "Không xác định";
+  }
+}
+
+export function getStatusColor(status: E_WORKOUT_STATUS): string {
+  switch (status) {
+    case E_WORKOUT_STATUS.PLANNED:
+      return "bg-blue-500/10 text-blue-600 border-blue-500/20";
+    case E_WORKOUT_STATUS.COMPLETED:
+      return "bg-green-500/10 text-green-600 border-green-500/20";
+    case E_WORKOUT_STATUS.SKIPPED:
+      return "bg-gray-500/10 text-gray-600 border-gray-500/20";
+    default:
+      return "bg-muted";
+  }
+}

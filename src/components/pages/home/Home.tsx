@@ -1,18 +1,8 @@
 "use client";
 import React from "react";
 
-import {
-  Flame,
-  Target,
-  TrendingDown,
-  TrendingUp,
-  Droplet,
-  Clock,
-  Apple,
-  Dumbbell,
-} from "lucide-react";
-import { DailyStats, CalorieRequirements, UserProfile } from "@/types";
-import { getDailyStats } from "@/lib/utils/storage";
+import { Flame, Target, TrendingDown, TrendingUp, Droplet, Apple, Dumbbell } from "lucide-react";
+import { CalorieRequirements, UserProfile } from "@/types";
 import { calculateCalorieRequirements } from "@/lib/utils/calculations";
 import {
   Button,
@@ -23,7 +13,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui";
-import { generateMotivationalMessage } from "@/lib/utils/aiCoach";
 import Link from "next/link";
 
 export function HomePage() {
@@ -39,27 +28,16 @@ export function HomePage() {
     updatedAt: "",
   };
   const today = new Date().toISOString().split("T")[0];
-  const [stats, setStats] = React.useState<DailyStats>(getDailyStats(today));
   const [requirements, setRequirements] = React.useState<CalorieRequirements>(
     calculateCalorieRequirements(profile)
   );
 
-  React.useEffect(() => {
-    // Refresh stats every minute
-    const interval = setInterval(() => {
-      setStats(getDailyStats(today));
-    }, 60000);
+  const caloriesRemaining = 0;
+  const caloriesProgress = 0;
+  const proteinProgress = 0;
+  const waterProgress = 0;
 
-    return () => clearInterval(interval);
-  }, [today]);
-
-  const caloriesRemaining = requirements.targetCalories - stats.caloriesIn + stats.caloriesOut;
-  const caloriesProgress =
-    ((stats.caloriesIn - stats.caloriesOut) / requirements.targetCalories) * 100;
-  const proteinProgress = (stats.protein / requirements.proteinGrams) * 100;
-  const waterProgress = (stats.water / 2500) * 100; // Target 2.5L
-
-  const motivationMessage = generateMotivationalMessage(profile, stats);
+  const motivationMessage = 0;
 
   return (
     <div className="space-y-6">
@@ -93,7 +71,7 @@ export function HomePage() {
             <Apple className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl">{Math.round(stats.protein)}g</div>
+            <div className="text-2xl">{0}g</div>
             <p className="text-muted-foreground text-xs">Mục tiêu: {requirements.proteinGrams}g</p>
             <Progress value={Math.min(100, proteinProgress)} className="mt-2" />
           </CardContent>
@@ -105,7 +83,7 @@ export function HomePage() {
             <Droplet className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl">{(stats.water / 1000).toFixed(1)}L</div>
+            <div className="text-2xl">{0}L</div>
             <p className="text-muted-foreground text-xs">Mục tiêu: 2.5L</p>
             <Progress value={Math.min(100, waterProgress)} className="mt-2" />
           </CardContent>
@@ -117,9 +95,9 @@ export function HomePage() {
             <Dumbbell className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl">{stats.workoutMinutes} phút</div>
-            <p className="text-muted-foreground text-xs">Đốt cháy: {stats.caloriesOut} kcal</p>
-            <Progress value={Math.min(100, (stats.workoutMinutes / 60) * 100)} className="mt-2" />
+            <div className="text-2xl">{0} phút</div>
+            <p className="text-muted-foreground text-xs">Đốt cháy: {0} kcal</p>
+            <Progress value={0} className="mt-2" />
           </CardContent>
         </Card>
       </div>
@@ -137,7 +115,7 @@ export function HomePage() {
                 <TrendingUp className="h-5 w-5 text-green-500" />
                 <span>Calo nạp vào</span>
               </div>
-              <span className="text-xl">{stats.caloriesIn} kcal</span>
+              <span className="text-xl">{0} kcal</span>
             </div>
 
             <div className="flex items-center justify-between">
@@ -145,7 +123,7 @@ export function HomePage() {
                 <TrendingDown className="h-5 w-5 text-red-500" />
                 <span>Calo đốt cháy</span>
               </div>
-              <span className="text-xl">{stats.caloriesOut} kcal</span>
+              <span className="text-xl">{0} kcal</span>
             </div>
 
             <div className="flex items-center justify-between border-t pt-4">
@@ -153,7 +131,7 @@ export function HomePage() {
                 <Target className="h-5 w-5 text-blue-500" />
                 <span>Chênh lệch</span>
               </div>
-              <span className="text-xl">{stats.caloriesIn - stats.caloriesOut} kcal</span>
+              <span className="text-xl">{0} kcal</span>
             </div>
           </div>
         </CardContent>
@@ -170,9 +148,7 @@ export function HomePage() {
             <div>
               <div className="mb-2 flex items-center justify-between">
                 <span>Protein</span>
-                <span>
-                  {Math.round(stats.protein)}g / {requirements.proteinGrams}g
-                </span>
+                <span>{0}g</span>
               </div>
               <Progress value={Math.min(100, proteinProgress)} className="h-2" />
             </div>
@@ -180,27 +156,17 @@ export function HomePage() {
             <div>
               <div className="mb-2 flex items-center justify-between">
                 <span>Carbs</span>
-                <span>
-                  {Math.round(stats.carbs)}g / {requirements.carbsGrams}g
-                </span>
+                <span>{0}g</span>
               </div>
-              <Progress
-                value={Math.min(100, (stats.carbs / requirements.carbsGrams) * 100)}
-                className="h-2"
-              />
+              <Progress value={0} className="h-2" />
             </div>
 
             <div>
               <div className="mb-2 flex items-center justify-between">
                 <span>Fat</span>
-                <span>
-                  {Math.round(stats.fat)}g / {requirements.fatGrams}g
-                </span>
+                <span>{0}g</span>
               </div>
-              <Progress
-                value={Math.min(100, (stats.fat / requirements.fatGrams) * 100)}
-                className="h-2"
-              />
+              <Progress value={0} className="h-2" />
             </div>
           </div>
         </CardContent>

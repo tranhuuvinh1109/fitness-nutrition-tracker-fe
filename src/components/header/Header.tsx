@@ -47,13 +47,15 @@ export const Header = () => {
           <div className="flex gap-1 overflow-x-auto">
             {HEADERS.map((item) => {
               const Icon = item.icon;
+              const isActive =
+                item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
               return (
                 <Link
                   href={item.href}
                   key={item.id}
                   className={cn(
                     "focus-visible:border-ring text-primary hover:bg-primary/90 focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive flex h-9 shrink-0 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium whitespace-nowrap transition-all outline-none hover:text-white focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 has-[>svg]:px-3 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-                    pathname.includes(item.href) && "bg-primary text-white"
+                    isActive && "bg-primary text-white"
                   )}
                 >
                   <Icon className="h-4 w-4" />

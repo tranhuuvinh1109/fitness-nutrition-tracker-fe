@@ -2,3 +2,4 @@ export * from "./home";
 export * from "./admin";
 export * from "./auth";
 export * from "./profile";
+export * from "./workoutTracker";

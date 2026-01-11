@@ -15,7 +15,6 @@ axiosClient.interceptors.request.use(
   (config) => {
     const localStorageData = localStorage.getItem(E_LOCAL_STORAGE.APP_NAME);
 
-    console.log("localStorageData", localStorageData);
     if (localStorageData) {
       const dataParsed = JSON.parse(localStorageData);
 
