@@ -5,6 +5,7 @@ import {
   getUserInfo,
   login,
   register,
+  updateUserProfile,
   //   registerGuestToken,
   //   requestPasswordReset,
   //   upgradeUser,
@@ -32,11 +33,11 @@ export const useRegister = () => {
   });
 };
 
-// export const useRegisterGuestToken = () => {
-//   return useMutation({
-//     mutationFn: registerGuestToken,
-//   });
-// };
+export const useUpdateProfile = () => {
+  return useMutation({
+    mutationFn: updateUserProfile,
+  });
+};
 
 // export const useUpgrade = () => {
 //   return useMutation({

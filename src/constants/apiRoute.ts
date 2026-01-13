@@ -4,4 +4,5 @@ export const API_ROUTES = {
   ME: "/me",
   WORKOUT_LOGS: "/workout-logs",
   WORKOUT_SUGGESTIONS: "/workout-suggestions",
+  UPDATE_PROFILE: "/user-profile",
 };

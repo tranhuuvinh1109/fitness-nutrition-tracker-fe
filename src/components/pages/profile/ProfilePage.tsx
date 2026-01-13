@@ -1,5 +1,9 @@
 "use client";
 
+import React, { useEffect, useState } from "react";
+import { toast } from "sonner";
+
+import { useUpdateProfile } from "@/api";
 import {
   Button,
   Card,
@@ -16,14 +20,20 @@ import {
   SelectValue,
 } from "@/components/ui";
 import { calculateBMI, getBMICategory } from "@/lib/utils/calculations";
+import { validateForm } from "@/lib/utils/helpers";
 import { useApp } from "@/providers";
 import { UserProfileType } from "@/types";
-import React, { useEffect, useState } from "react";
 
-import { toast } from "sonner";
+const ACTIVITY_TO_WORKOUT_DAYS: Record<UserProfileType["activity_level"], number> = {
+  low: 2,
+  medium: 4,
+  high: 6,
+};
 
 export function UserProfilePage() {
-  const { user } = useApp();
+  const { user, setUser } = useApp();
+  const { mutate: updateProfile } = useUpdateProfile();
+
   const [formData, setFormData] = useState<UserProfileType>({
     user_id: "",
     age: 0,
@@ -33,46 +43,80 @@ export function UserProfilePage() {
     activity_level: "medium",
     bmi: "",
     target: {
-      main_target: "",
-      main_weight_kg: 0,
-      priority: "",
+      daily_calories: 0,
+      goal: "",
+      target_weight: 0,
+      weekly_workout_days: 0,
     },
   });
 
+  const updateField = <K extends keyof UserProfileType>(field: K, value: UserProfileType[K]) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const updateTargetField = <K extends keyof UserProfileType["target"]>(
+    field: K,
+    value: UserProfileType["target"][K]
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      target: {
+        ...prev.target,
+        [field]: value,
+      },
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-  };
 
-  const updateField = (field: keyof UserProfileType, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+    const errors = validateForm(formData);
 
-  const updateTargetField = (
-    field: keyof {
-      main_target: string;
-      main_weight_kg?: number;
-      priority: string;
-    },
-    value: any
-  ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const bmi = user?.profile ? calculateBMI(user?.profile.weight_kg, user?.profile.height_cm) : 0;
-  useEffect(() => {
-    if (user?.profile) {
-      setFormData({
-        user_id: user?.id ?? "",
-        age: user?.profile.age,
-        gender: user?.profile.gender,
-        weight_kg: user?.profile.weight_kg,
-        height_cm: user?.profile.height_cm,
-        activity_level: user?.profile.activity_level,
-        target: user?.profile.target,
-        bmi: `${bmi}`,
-      });
+    if (Object.keys(errors).length > 0) {
+      toast.error("Vui lòng kiểm tra lại thông tin nhập.");
+      console.log("Validation errors:", errors);
+      return;
     }
-  }, [user, bmi]);
+
+    updateProfile(formData, {
+      onSuccess: (data) => {
+        setUser((pre) => {
+          if (!pre) return;
+          return { ...pre, profile: data };
+        });
+        toast.success("Cập nhật thông tin thành công.");
+      },
+      onError: () => toast.error("Cập nhật thông tin thất bại."),
+    });
+  };
+
+  const bmi =
+    formData.height_cm && formData.weight_kg
+      ? calculateBMI(formData.weight_kg, formData.height_cm)
+      : 0;
+
+  useEffect(() => {
+    if (!user || !user?.profile) return;
+
+    setFormData({
+      user_id: user.id ?? "",
+      age: user.profile.age,
+      gender: user.profile.gender,
+      weight_kg: user.profile.weight_kg,
+      height_cm: user.profile.height_cm,
+      activity_level: user.profile.activity_level,
+      bmi: `${bmi}`,
+      target: user.profile.target ?? {
+        daily_calories: 0,
+        goal: "",
+        target_weight: 0,
+        weekly_workout_days: 0,
+      },
+    });
+  }, [user]);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -84,88 +128,76 @@ export function UserProfilePage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* -------- Basic Info -------- */}
         <Card>
           <CardHeader>
             <CardTitle>Thông tin cơ bản</CardTitle>
             <CardDescription>Độ tuổi và giới tính</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="age">Tuổi</Label>
-                <Input
-                  id="age"
-                  type="number"
-                  value={formData.age}
-                  onChange={(e) => updateField("age", parseInt(e.target.value))}
-                  required
-                  min="15"
-                  max="100"
-                />
-              </div>
+          <CardContent className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Tuổi</Label>
+              <Input
+                type="number"
+                value={formData.age}
+                onChange={(e) => updateField("age", Number(e.target.value))}
+                min={15}
+                max={100}
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="gender">Giới tính</Label>
-                <Select value={formData.gender} onValueChange={(v) => updateField("gender", v)}>
-                  <SelectTrigger id="gender">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Nam</SelectItem>
-                    <SelectItem value="female">Nữ</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label>Giới tính</Label>
+              <Select value={formData.gender} onValueChange={(v) => updateField("gender", v)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Nam</SelectItem>
+                  <SelectItem value="female">Nữ</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
 
+        {/* -------- Body Info -------- */}
         <Card>
           <CardHeader>
             <CardTitle>Chỉ số cơ thể</CardTitle>
-            <CardDescription>Cân nặng và chiều cao hiện tại</CardDescription>
+            <CardDescription>Cân nặng và chiều cao</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="weight">Cân nặng (kg)</Label>
+                <Label>Cân nặng (kg)</Label>
                 <Input
-                  id="weight"
                   type="number"
                   value={formData.weight_kg}
-                  onChange={(e) => updateField("weight_kg", parseFloat(e.target.value))}
-                  required
-                  min="30"
-                  max="300"
-                  step="0.1"
+                  onChange={(e) => updateField("weight_kg", Number(e.target.value))}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="height">Chiều cao (cm)</Label>
+                <Label>Chiều cao (cm)</Label>
                 <Input
-                  id="height"
                   type="number"
                   value={formData.height_cm}
-                  onChange={(e) => updateField("height_cm", parseInt(e.target.value))}
-                  required
-                  min="100"
-                  max="250"
+                  onChange={(e) => updateField("height_cm", Number(e.target.value))}
                 />
               </div>
             </div>
 
-            <div className="bg-muted rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <span>Chỉ số BMI:</span>
-                <span className="text-xl">
-                  {`${bmi} - ${user?.profile ? getBMICategory(bmi) : 0} `}
-                </span>
-              </div>
+            <div className="bg-muted flex justify-between rounded-lg p-4">
+              <span>BMI:</span>
+              <span className="text-lg">
+                {bmi} - {getBMICategory(bmi)}
+              </span>
             </div>
           </CardContent>
         </Card>
 
+        {/* -------- Activity -------- */}
         <Card>
           <CardHeader>
             <CardTitle>Mức độ vận động</CardTitle>
@@ -174,17 +206,19 @@ export function UserProfilePage() {
           <CardContent>
             <Select
               value={formData.activity_level}
-              onValueChange={(v) => updateField("activity_level", v)}
+              onValueChange={(v) => {
+                updateField("activity_level", v);
+                const workoutDays = ACTIVITY_TO_WORKOUT_DAYS[v];
+                updateTargetField("weekly_workout_days", workoutDays);
+              }}
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="sedentary">Ít vận động (văn phòng)</SelectItem>
-                <SelectItem value="light">Nhẹ nhàng (1-2 ngày/tuần)</SelectItem>
+                <SelectItem value="low">Nhẹ nhàng (1-2 ngày/tuần)</SelectItem>
                 <SelectItem value="medium">Trung bình (3-5 ngày/tuần)</SelectItem>
-                <SelectItem value="active">Tích cực (6-7 ngày/tuần)</SelectItem>
-                <SelectItem value="very-active">Rất tích cực (vận động viên)</SelectItem>
+                <SelectItem value="high">Tích cực (6-7 ngày/tuần)</SelectItem>
               </SelectContent>
             </Select>
           </CardContent>
@@ -199,10 +233,10 @@ export function UserProfilePage() {
             <div className="space-y-2">
               <Label htmlFor="goal">Mục tiêu chính</Label>
               <Select
-                value={formData.target.main_target}
-                onValueChange={(v) => updateTargetField("main_target", v)}
+                value={formData.target.goal}
+                onValueChange={(v) => updateTargetField("goal", v)}
               >
-                <SelectTrigger id="goal">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -213,14 +247,13 @@ export function UserProfilePage() {
               </Select>
             </div>
 
-            {formData.target.main_target !== "maintain" && (
+            {formData.target.goal !== "maintain" && (
               <div className="space-y-2">
                 <Label htmlFor="targetWeight">Cân nặng mục tiêu (kg)</Label>
                 <Input
-                  id="targetWeight"
                   type="number"
-                  value={formData.target.main_weight_kg}
-                  onChange={(e) => updateTargetField("main_weight_kg", parseFloat(e.target.value))}
+                  value={formData.target.target_weight}
+                  onChange={(e) => updateTargetField("target_weight", Number(e.target.value))}
                   min="30"
                   max="300"
                   step="0.1"
@@ -229,29 +262,23 @@ export function UserProfilePage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="priority">Ưu tiên tập luyện</Label>
-              <Select
-                value={formData.target.priority}
-                onValueChange={(v) => updateTargetField("priority", v)}
-              >
-                <SelectTrigger id="priority">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="fat-loss">Giảm mỡ</SelectItem>
-                  <SelectItem value="muscle-gain">Tăng cơ</SelectItem>
-                  <SelectItem value="endurance">Sức bền</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="dailyCalories">Lượng calo mục tiêu mỗi ngày (kcal)</Label>
+              <Input
+                id="dailyCalories"
+                type="number"
+                value={formData.target.daily_calories}
+                onChange={(e) => updateTargetField("daily_calories", Number(e.target.value))}
+                min={1000}
+                max={6000}
+                step={50}
+              />
             </div>
           </CardContent>
         </Card>
 
-        <div className="flex gap-4">
-          <Button type="submit" className="flex-1">
-            {user?.profile ? "Cập nhật hồ sơ" : "Tạo hồ sơ"}
-          </Button>
-        </div>
+        <Button type="submit" className="w-full">
+          {user?.profile ? "Cập nhật hồ sơ" : "Tạo hồ sơ"}
+        </Button>
       </form>
     </div>
   );

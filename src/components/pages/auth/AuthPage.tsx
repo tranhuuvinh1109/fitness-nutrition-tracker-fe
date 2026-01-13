@@ -84,6 +84,12 @@ export function AuthPage() {
             JSON.stringify({ access_token: data.access_token, refresh_token: data.refresh_token })
           );
           setUser(data.user);
+
+          if (!data.user?.profile?.target) {
+            router.replace("/profile");
+            toast.success("Vui lòng điền thông tin");
+            return;
+          }
           router.replace("/");
           toast.success("Đăng nhập thành công");
         },

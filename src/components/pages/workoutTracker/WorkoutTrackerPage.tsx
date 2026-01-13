@@ -9,29 +9,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  Input,
-  Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Textarea,
 } from "@/components/ui";
 import dayjs from "dayjs";
 import { E_WORKOUT_STATUS } from "@/enums";
 import { useApp } from "@/providers";
-import { WorkoutEntry, WorkoutPlan, WorkoutType } from "@/types";
 import {
   Calendar,
   Check,
@@ -45,17 +26,20 @@ import {
   X,
   XCircle,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import isoWeek from "dayjs/plugin/isoWeek";
 import { toast } from "sonner";
 import { getStatusColor, getStatusLabel } from "@/lib/utils/calculations";
+import { useRouter } from "next/navigation";
 dayjs.extend(isoWeek);
 
 export function WorkoutTracker() {
   const startDay = dayjs().startOf("isoWeek").format("YYYY-MM-DD"); // Thứ 2
   const endDay = dayjs().endOf("isoWeek").format("YYYY-MM-DD"); // Chủ nhật
 
-  const { data: workoutLogsData } = useGetAllWorkouts({
+  const router = useRouter();
+
+  const { data: workoutLogsData, refetch } = useGetAllWorkouts({
     start_day: startDay,
     end_day: endDay,
   });
@@ -65,10 +49,16 @@ export function WorkoutTracker() {
   const { user } = useApp();
 
   const handleGeneratePlan = () => {
+    if (!user?.profile?.activity_level) {
+      router.push("/profile");
+      toast.error("Vui lòng điền thông tin");
+      return;
+    }
     generateWorkoutSuggestions(undefined, {
       onSuccess: (data) => {
         console.log("--->", data);
         toast.success("Đã tạo kế hoạch tập luyện!");
+        refetch();
       },
       onError: (err) => {
         console.log(err);
@@ -310,9 +300,9 @@ export function WorkoutTracker() {
                   </p>
                   <p className="text-muted-foreground text-sm">
                     {workoutLogsData?.length} bài tập • Mục tiêu:{" "}
-                    {user?.profile?.target.main_target === "lose-weight"
+                    {user?.profile?.target?.goal === "lose-weight"
                       ? "Giảm cân"
-                      : user?.profile?.target.main_target === "gain-muscle"
+                      : user?.profile?.target?.goal === "gain-muscle"
                         ? "Tăng cơ"
                         : "Duy trì"}
                   </p>

@@ -1,4 +1,4 @@
-import { UserInfoType } from "@/types";
+import { UserInfoType, UserProfileType } from "@/types";
 import { ApiReponseType } from "../common.type";
 
 export type RegisterPayloadType = {
@@ -31,11 +31,9 @@ export type RegisterGuestTokenDataType = {
 };
 export type RegisterGuestTokenReponseType = ApiReponseType<RegisterGuestTokenDataType>;
 
-export type UpgradePayloadType = {
-  username: string;
-  password: string;
-  email: string;
-};
+export type UpdateProfilePayload = UserProfileType;
+
+export type UpdateProfileResponseDataType = UserProfileType;
 
 export type UpgradeResponseDataType = {
   data: {

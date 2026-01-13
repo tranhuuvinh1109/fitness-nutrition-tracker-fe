@@ -8,7 +8,8 @@ import {
   RegisterGuestTokenDataType,
   RegisterPayloadType,
   RequestPasswordResetRequestType,
-  UpgradePayloadType,
+  UpdateProfilePayload,
+  UpdateProfileResponseDataType,
   UpgradeResponseDataType,
   VerifyTempPasswordRequestType,
 } from "./user.type";
@@ -32,10 +33,13 @@ export const register = async (payload: RegisterPayloadType) => {
   return response.data;
 };
 
-// export const upgradeUser = async (payload: UpgradePayloadType) => {
-//   const response = await axiosClient.put<UpgradeResponseDataType>(API_ROUTES.UPGRADE, payload);
-//   return response.data;
-// };
+export const updateUserProfile = async (payload: UpdateProfilePayload) => {
+  const response = await axiosClient.put<UpdateProfileResponseDataType>(
+    API_ROUTES.UPDATE_PROFILE,
+    payload
+  );
+  return response.data;
+};
 
 // export const registerGuestToken = async () => {
 //   const response = await axiosClient.post<RegisterGuestTokenDataType>(API_ROUTES.GUEST);

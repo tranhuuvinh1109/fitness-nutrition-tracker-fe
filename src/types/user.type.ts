@@ -17,8 +17,9 @@ export type UserProfileType = {
   updated_at?: string;
   bmi: string;
   target: {
-    main_target: string;
-    main_weight_kg?: number;
-    priority: string;
+    daily_calories: number;
+    goal: string;
+    target_weight: number;
+    weekly_workout_days: number;
   };
 };
