@@ -13,6 +13,7 @@ import {
   CardTitle,
   Input,
   Label,
+  LoadingPage,
   Select,
   SelectContent,
   SelectItem,
@@ -32,7 +33,7 @@ const ACTIVITY_TO_WORKOUT_DAYS: Record<UserProfileType["activity_level"], number
 
 export function UserProfilePage() {
   const { user, setUser } = useApp();
-  const { mutate: updateProfile } = useUpdateProfile();
+  const { mutate: updateProfile, isPending } = useUpdateProfile();
 
   const [formData, setFormData] = useState<UserProfileType>({
     user_id: "",
@@ -119,167 +120,170 @@ export function UserProfilePage() {
   }, [user]);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <h1>{user?.profile ? "Chỉnh sửa hồ sơ" : "Thiết lập hồ sơ"}</h1>
-        <p className="text-muted-foreground">
-          Thông tin của bạn giúp chúng tôi tính toán nhu cầu năng lượng chính xác
-        </p>
-      </div>
+    <>
+      <div className="mx-auto max-w-2xl space-y-6">
+        <div>
+          <h1>{user?.profile ? "Chỉnh sửa hồ sơ" : "Thiết lập hồ sơ"}</h1>
+          <p className="text-muted-foreground">
+            Thông tin của bạn giúp chúng tôi tính toán nhu cầu năng lượng chính xác
+          </p>
+        </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* -------- Basic Info -------- */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Thông tin cơ bản</CardTitle>
-            <CardDescription>Độ tuổi và giới tính</CardDescription>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Tuổi</Label>
-              <Input
-                type="number"
-                value={formData.age}
-                onChange={(e) => updateField("age", Number(e.target.value))}
-                min={15}
-                max={100}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Giới tính</Label>
-              <Select value={formData.gender} onValueChange={(v) => updateField("gender", v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="male">Nam</SelectItem>
-                  <SelectItem value="female">Nữ</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* -------- Body Info -------- */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Chỉ số cơ thể</CardTitle>
-            <CardDescription>Cân nặng và chiều cao</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* -------- Basic Info -------- */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Thông tin cơ bản</CardTitle>
+              <CardDescription>Độ tuổi và giới tính</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Cân nặng (kg)</Label>
+                <Label>Tuổi</Label>
                 <Input
                   type="number"
-                  value={formData.weight_kg}
-                  onChange={(e) => updateField("weight_kg", Number(e.target.value))}
+                  value={formData.age}
+                  onChange={(e) => updateField("age", Number(e.target.value))}
+                  min={15}
+                  max={100}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Chiều cao (cm)</Label>
-                <Input
-                  type="number"
-                  value={formData.height_cm}
-                  onChange={(e) => updateField("height_cm", Number(e.target.value))}
-                />
+                <Label>Giới tính</Label>
+                <Select value={formData.gender} onValueChange={(v) => updateField("gender", v)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Nam</SelectItem>
+                    <SelectItem value="female">Nữ</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            <div className="bg-muted flex justify-between rounded-lg p-4">
-              <span>BMI:</span>
-              <span className="text-lg">
-                {bmi} - {getBMICategory(bmi)}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+          {/* -------- Body Info -------- */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Chỉ số cơ thể</CardTitle>
+              <CardDescription>Cân nặng và chiều cao</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Cân nặng (kg)</Label>
+                  <Input
+                    type="number"
+                    value={formData.weight_kg}
+                    onChange={(e) => updateField("weight_kg", Number(e.target.value))}
+                  />
+                </div>
 
-        {/* -------- Activity -------- */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Mức độ vận động</CardTitle>
-            <CardDescription>Mức độ hoạt động thể chất hàng tuần</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Select
-              value={formData.activity_level}
-              onValueChange={(v) => {
-                updateField("activity_level", v);
-                const workoutDays = ACTIVITY_TO_WORKOUT_DAYS[v];
-                updateTargetField("weekly_workout_days", workoutDays);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Nhẹ nhàng (1-2 ngày/tuần)</SelectItem>
-                <SelectItem value="medium">Trung bình (3-5 ngày/tuần)</SelectItem>
-                <SelectItem value="high">Tích cực (6-7 ngày/tuần)</SelectItem>
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
+                <div className="space-y-2">
+                  <Label>Chiều cao (cm)</Label>
+                  <Input
+                    type="number"
+                    value={formData.height_cm}
+                    onChange={(e) => updateField("height_cm", Number(e.target.value))}
+                  />
+                </div>
+              </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Mục tiêu sức khỏe</CardTitle>
-            <CardDescription>Bạn muốn đạt được điều gì?</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="goal">Mục tiêu chính</Label>
+              <div className="bg-muted flex justify-between rounded-lg p-4">
+                <span>BMI:</span>
+                <span className="text-lg">
+                  {bmi} - {getBMICategory(bmi)}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* -------- Activity -------- */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Mức độ vận động</CardTitle>
+              <CardDescription>Mức độ hoạt động thể chất hàng tuần</CardDescription>
+            </CardHeader>
+            <CardContent>
               <Select
-                value={formData.target.goal}
-                onValueChange={(v) => updateTargetField("goal", v)}
+                value={formData.activity_level}
+                onValueChange={(v) => {
+                  updateField("activity_level", v);
+                  const workoutDays = ACTIVITY_TO_WORKOUT_DAYS[v];
+                  updateTargetField("weekly_workout_days", workoutDays);
+                }}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="lose-weight">Giảm cân</SelectItem>
-                  <SelectItem value="gain-muscle">Tăng cơ</SelectItem>
-                  <SelectItem value="maintain">Duy trì cân nặng</SelectItem>
+                  <SelectItem value="low">Nhẹ nhàng (1-2 ngày/tuần)</SelectItem>
+                  <SelectItem value="medium">Trung bình (3-5 ngày/tuần)</SelectItem>
+                  <SelectItem value="high">Tích cực (6-7 ngày/tuần)</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </CardContent>
+          </Card>
 
-            {formData.target.goal !== "maintain" && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Mục tiêu sức khỏe</CardTitle>
+              <CardDescription>Bạn muốn đạt được điều gì?</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="targetWeight">Cân nặng mục tiêu (kg)</Label>
+                <Label htmlFor="goal">Mục tiêu chính</Label>
+                <Select
+                  value={formData.target.goal}
+                  onValueChange={(v) => updateTargetField("goal", v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="lose-weight">Giảm cân</SelectItem>
+                    <SelectItem value="gain-muscle">Tăng cơ</SelectItem>
+                    <SelectItem value="maintain">Duy trì cân nặng</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {formData.target.goal !== "maintain" && (
+                <div className="space-y-2">
+                  <Label htmlFor="targetWeight">Cân nặng mục tiêu (kg)</Label>
+                  <Input
+                    type="number"
+                    value={formData.target.target_weight}
+                    onChange={(e) => updateTargetField("target_weight", Number(e.target.value))}
+                    min="30"
+                    max="300"
+                    step="0.1"
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="dailyCalories">Lượng calo mục tiêu mỗi ngày (kcal)</Label>
                 <Input
+                  id="dailyCalories"
                   type="number"
-                  value={formData.target.target_weight}
-                  onChange={(e) => updateTargetField("target_weight", Number(e.target.value))}
-                  min="30"
-                  max="300"
-                  step="0.1"
+                  value={formData.target.daily_calories}
+                  onChange={(e) => updateTargetField("daily_calories", Number(e.target.value))}
+                  min={1000}
+                  max={6000}
+                  step={50}
                 />
               </div>
-            )}
+            </CardContent>
+          </Card>
 
-            <div className="space-y-2">
-              <Label htmlFor="dailyCalories">Lượng calo mục tiêu mỗi ngày (kcal)</Label>
-              <Input
-                id="dailyCalories"
-                type="number"
-                value={formData.target.daily_calories}
-                onChange={(e) => updateTargetField("daily_calories", Number(e.target.value))}
-                min={1000}
-                max={6000}
-                step={50}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Button type="submit" className="w-full">
-          {user?.profile ? "Cập nhật hồ sơ" : "Tạo hồ sơ"}
-        </Button>
-      </form>
-    </div>
+          <Button type="submit" className="w-full">
+            {user?.profile ? "Cập nhật hồ sơ" : "Tạo hồ sơ"}
+          </Button>
+        </form>
+      </div>
+      <LoadingPage isOpen={isPending} />
+    </>
   );
 }
