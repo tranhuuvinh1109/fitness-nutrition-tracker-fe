@@ -12,6 +12,8 @@ import {
   UpdateProfileResponseDataType,
   UpgradeResponseDataType,
   VerifyTempPasswordRequestType,
+  NutritionAnalyticsType,
+  WorkoutAnalyticsType,
 } from "./user.type";
 
 export const getUserInfo = async () => {
@@ -60,3 +62,17 @@ export const updateUserProfile = async (payload: UpdateProfilePayload) => {
 //   const response = await axiosClient.post(API_ROUTES.CHANGE_PASSWORD, payload);
 //   return response.data;
 // };
+
+export const getNutritionAnalytics = async (mode: number) => {
+  const response = await axiosClient.get<NutritionAnalyticsType[]>(API_ROUTES.ANALYTICS_CALO, {
+    params: { mode },
+  });
+  return response.data;
+};
+
+export const getWorkoutAnalytics = async (mode: number) => {
+  const response = await axiosClient.get<WorkoutAnalyticsType[]>(API_ROUTES.ANALYTICS_WORKOUT, {
+    params: { mode },
+  });
+  return response.data;
+};

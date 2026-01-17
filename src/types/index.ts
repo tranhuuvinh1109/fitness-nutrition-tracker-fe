@@ -89,3 +89,4 @@ export interface CalorieRequirements {
 
 export * from "./user.type";
 export * from "./workout.type";
+export * from "./food.type";

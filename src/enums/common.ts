@@ -7,3 +7,10 @@ export enum E_WORKOUT_STATUS {
   COMPLETED = 1,
   SKIPPED = 2,
 }
+
+export enum E_MEAL_TYPE {
+  BREAKFAST = "breakfast",
+  LUNCH = "lunch",
+  DINNER = "dinner",
+  SNACK = "snack",
+}

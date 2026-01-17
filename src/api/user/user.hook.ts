@@ -6,6 +6,8 @@ import {
   login,
   register,
   updateUserProfile,
+  getNutritionAnalytics,
+  getWorkoutAnalytics,
   //   registerGuestToken,
   //   requestPasswordReset,
   //   upgradeUser,
@@ -39,26 +41,20 @@ export const useUpdateProfile = () => {
   });
 };
 
-// export const useUpgrade = () => {
-//   return useMutation({
-//     mutationFn: upgradeUser,
-//   });
-// };
+export const useNutritionAnalytics = (mode: number) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.NUTRITION_ANALYTICS, mode],
+    queryFn: () => getNutritionAnalytics(mode),
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
+};
 
-// export const useRequestPasswordReset = () => {
-//   return useMutation({
-//     mutationFn: requestPasswordReset,
-//   });
-// };
-
-// export const useVerifyPassword = () => {
-//   return useMutation({
-//     mutationFn: verifyPassword,
-//   });
-// };
-
-// export const useChangePassword = () => {
-//   return useMutation({
-//     mutationFn: changePassword,
-//   });
-// };
+export const useWorkoutAnalytics = (mode: number) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.WORKOUT_ANALYTICS, mode],
+    queryFn: () => getWorkoutAnalytics(mode),
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
+};

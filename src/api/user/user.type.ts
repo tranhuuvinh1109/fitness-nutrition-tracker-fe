@@ -59,3 +59,17 @@ export type ChangePasswordRequestType = {
   new_password: string;
   temp_password: string;
 };
+
+export type NutritionAnalyticsType = {
+  calories: number;
+  carbs: number;
+  day: string;
+  fat: number;
+  protein: number;
+};
+
+export type WorkoutAnalyticsType = {
+  calo: number;
+  day: string;
+  duration_min: number;
+};
