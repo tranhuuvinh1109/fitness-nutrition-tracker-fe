@@ -21,5 +21,6 @@ export type WorkoutLogType = {
   workout_metadata: {
     description: string;
     name: string;
+    link_reference?: string | null;
   };
 };

@@ -5,4 +5,11 @@ export const API_ROUTES = {
   WORKOUT_LOGS: "/workout-logs",
   WORKOUT_SUGGESTIONS: "/workout-suggestions",
   UPDATE_PROFILE: "/user-profile",
+  FOODS: "/foods",
+  FOOD_SUGGESTIONS: "/food-suggestions",
+  FOOD_LOGS: "/food-logs",
+  ANALYTICS_CALO: "/analytics/calo",
+  ANALYTICS_WORKOUT: "/analytics/workout",
+  AI_ASK: "/ai-messages/ask",
+  AI_MESSAGES: "/ai-messages",
 };

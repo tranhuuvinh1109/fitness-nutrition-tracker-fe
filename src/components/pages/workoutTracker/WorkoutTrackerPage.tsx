@@ -1,6 +1,6 @@
 "use client";
 
-import { useGetAllWorkouts, useWorkoutSuggestions } from "@/api";
+import { useGetAllWorkouts, useUpdateStatusWorkout, useWorkoutSuggestions } from "@/api";
 import {
   Badge,
   Button,
@@ -9,43 +9,44 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  LoadingPage,
 } from "@/components/ui";
 import dayjs from "dayjs";
 import { E_WORKOUT_STATUS } from "@/enums";
 import { useApp } from "@/providers";
-import {
-  Calendar,
-  Check,
-  CheckCircle2,
-  Circle,
-  Clock,
-  Flame,
-  Plus,
-  RefreshCw,
-  Sparkles,
-  X,
-  XCircle,
-} from "lucide-react";
-import { useMemo } from "react";
 import isoWeek from "dayjs/plugin/isoWeek";
 import { toast } from "sonner";
 import { getStatusColor, getStatusLabel } from "@/lib/utils/calculations";
 import { useRouter } from "next/navigation";
+import { DatePicker } from "antd";
+import { Calendar as CalendarIcon, Calendar, Check, CheckCircle2, Circle, Clock, Flame, Plus, RefreshCw, Sparkles, X, XCircle } from "lucide-react";
+import { useMemo, useState } from "react";
 dayjs.extend(isoWeek);
 
 export function WorkoutTracker() {
-  const startDay = dayjs().startOf("isoWeek").format("YYYY-MM-DD"); // Thứ 2
-  const endDay = dayjs().endOf("isoWeek").format("YYYY-MM-DD"); // Chủ nhật
+  const [currentWeek, setCurrentWeek] = useState<dayjs.Dayjs>(dayjs());
+
+  const startDay = currentWeek.startOf("isoWeek").format("YYYY-MM-DD"); // Thứ 2
+  const endDay = currentWeek.endOf("isoWeek").format("YYYY-MM-DD"); // Chủ nhật
 
   const router = useRouter();
 
-  const { data: workoutLogsData, refetch } = useGetAllWorkouts({
+  const { data: workoutLogsData, refetch, isLoading: isLoadingLogs } = useGetAllWorkouts({
     start_day: startDay,
     end_day: endDay,
   });
 
-  const { mutate: generateWorkoutSuggestions, isPending: isPendingGenrate } =
+  const sortedWorkoutLogs = useMemo(() => {
+    if (!workoutLogsData) return [];
+    return [...workoutLogsData].sort((a, b) => dayjs(a.log_date).diff(dayjs(b.log_date)));
+  }, [workoutLogsData]);
+
+  const { mutate: updateStatusWorkout, isPending: isPendingUpdate } = useUpdateStatusWorkout();
+
+  const { mutate: generateWorkoutSuggestions, isPending: isPendingGenerate } =
     useWorkoutSuggestions();
+
+  const isLoading = isLoadingLogs || isPendingGenerate;
   const { user } = useApp();
 
   const handleGeneratePlan = () => {
@@ -54,9 +55,11 @@ export function WorkoutTracker() {
       toast.error("Vui lòng điền thông tin");
       return;
     }
-    generateWorkoutSuggestions(undefined, {
+    generateWorkoutSuggestions({
+        start_day: startDay,
+        end_day: endDay,
+    }, {
       onSuccess: (data) => {
-        console.log("--->", data);
         toast.success("Đã tạo kế hoạch tập luyện!");
         refetch();
       },
@@ -87,7 +90,7 @@ export function WorkoutTracker() {
   };
 
   const { totalTime, totalCalo, totalWorkout } = useMemo(() => {
-    if (!workoutLogsData || workoutLogsData.length === 0) {
+    if (!sortedWorkoutLogs || sortedWorkoutLogs.length === 0) {
       return {
         totalTime: 0,
         totalCalo: 0,
@@ -95,7 +98,7 @@ export function WorkoutTracker() {
       };
     }
 
-    return workoutLogsData.reduce(
+    return sortedWorkoutLogs.reduce(
       (acc, item) => {
         acc.totalTime += item.duration_min ?? 0;
         acc.totalCalo += item.calories_burned ?? 0;
@@ -108,97 +111,50 @@ export function WorkoutTracker() {
         totalWorkout: 0,
       }
     );
-  }, [workoutLogsData]);
+  }, [sortedWorkoutLogs]);
+
+
+  const handleUpdateStatusWorkout = (workoutLogId: string, status: E_WORKOUT_STATUS) => {
+    updateStatusWorkout({
+      workout_log_id: workoutLogId,
+      status,
+    }, {
+      onSuccess: () => {
+        toast.success("Đã cập nhật trạng thái!");
+        refetch();
+      },
+      onError: (err) => {
+        console.log(err);
+        toast.error("Có lỗi xảy ra khi cập nhật trạng thái");
+      },
+    });
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1>Nhật ký luyện tập theo tuần</h1>
+          <h1 className="text-2xl font-bold">Nhật ký luyện tập theo tuần</h1>
           <p className="text-muted-foreground">Theo dõi hoạt động thể chất và calo đốt cháy</p>
         </div>
 
-        {/* <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Thêm bài tập
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Thêm bài tập</DialogTitle>
-              <DialogDescription>Ghi lại hoạt động thể chất của bạn</DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Loại bài tập</Label>
-                <Select value={workoutType} onValueChange={setWorkoutType}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent></SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Tên bài tập</Label>
-                <Input
-                  value={workoutName}
-                  onChange={(e) => setWorkoutName(e.target.value)}
-                  placeholder="Ví dụ: Chạy buổi sáng, Tập ngực..."
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Thời gian (phút)</Label>
-                  <Input
-                    type="number"
-                    value={duration}
-                    onChange={(e) => setDuration(parseInt(e.target.value) || 0)}
-                    min="1"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Cường độ</Label>
-                  <Select value={intensity} onValueChange={(v: any) => setIntensity(v)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Nhẹ</SelectItem>
-                      <SelectItem value="medium">Trung bình</SelectItem>
-                      <SelectItem value="high">Cao</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Ghi chú (tùy chọn)</Label>
-                <Textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Cảm nhận, số lượng set/rep..."
-                  rows={3}
-                />
-              </div>
-
-              <div className="bg-muted rounded-lg p-3">
-                <p className="text-sm">
-                  Ước tính đốt cháy: <span className="font-semibold">{0} kcal</span>
-                </p>
-              </div>
-
-              <Button onClick={handleAdd} className="w-full">
-                Thêm bài tập
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog> */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 rounded-lg border bg-card p-1">
+            <CalendarIcon className="text-muted-foreground ml-2 h-4 w-4" />
+            <DatePicker
+              picker="week"
+              value={currentWeek}
+              onChange={(date) => date && setCurrentWeek(date)}
+              allowClear={false}
+              format={() =>
+                `${currentWeek.startOf("isoWeek").format("DD/MM")} - ${currentWeek
+                  .endOf("isoWeek")
+                  .format("DD/MM/YYYY")}`
+              }
+              className="border-none shadow-none focus:ring-0"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Summary */}
@@ -242,8 +198,8 @@ export function WorkoutTracker() {
               <CardDescription>Được cá nhân hóa dựa trên mục tiêu của bạn</CardDescription>
             </div>
             {!workoutLogsData?.length && (
-              <Button onClick={handleGeneratePlan} disabled={isPendingGenrate} className="gap-2">
-                {isPendingGenrate ? (
+              <Button onClick={handleGeneratePlan} disabled={isPendingGenerate} className="gap-2">
+                {isPendingGenerate ? (
                   <>
                     <RefreshCw className="h-4 w-4 animate-spin" />
                     Đang tạo...
@@ -259,7 +215,7 @@ export function WorkoutTracker() {
           </div>
         </CardHeader>
         <CardContent>
-          {isPendingGenrate ? (
+          {isPendingGenerate ? (
             <div className="space-y-4 py-12 text-center">
               <div className="flex justify-center">
                 <div className="relative">
@@ -299,7 +255,7 @@ export function WorkoutTracker() {
                     {dayjs(endDay).format("DD-MM")}
                   </p>
                   <p className="text-muted-foreground text-sm">
-                    {workoutLogsData?.length} bài tập • Mục tiêu:{" "}
+                    {sortedWorkoutLogs?.length} bài tập • Mục tiêu:{" "}
                     {user?.profile?.target?.goal === "lose-weight"
                       ? "Giảm cân"
                       : user?.profile?.target?.goal === "gain-muscle"
@@ -311,7 +267,7 @@ export function WorkoutTracker() {
 
               {/* Workouts by Date */}
               <div className="space-y-4">
-                {workoutLogsData?.map((item) => (
+                {sortedWorkoutLogs?.map((item) => (
                   <div key={item.id} className="space-y-3">
                     <div className="bg-background sticky top-0 flex items-center gap-2 py-2">
                       <Calendar className="text-muted-foreground h-4 w-4" />
@@ -373,13 +329,7 @@ export function WorkoutTracker() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  //   onClick={() =>
-                                  //     handleUpdateWorkoutStatus(
-                                  //       workout.id,
-                                  //       log.id,
-                                  //       E_WORKOUT_STATUS.COMPLETED
-                                  //     )
-                                  //   }
+                                  onClick={() => handleUpdateStatusWorkout(item.id, E_WORKOUT_STATUS.COMPLETED)}
                                   className="h-8 gap-1"
                                 >
                                   <Check className="h-3.5 w-3.5" />
@@ -388,13 +338,7 @@ export function WorkoutTracker() {
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  //   onClick={() =>
-                                  //     handleUpdateWorkoutStatus(
-                                  //       workout.id,
-                                  //       log.id,
-                                  //       E_WORKOUT_STATUS.SKIPPED
-                                  //     )
-                                  //   }
+                                  onClick={() => handleUpdateStatusWorkout(item.id, E_WORKOUT_STATUS.SKIPPED)}
                                   className="h-8 gap-1"
                                 >
                                   <X className="h-3.5 w-3.5" />
@@ -413,6 +357,7 @@ export function WorkoutTracker() {
           )}
         </CardContent>
       </Card>
+      <LoadingPage isOpen={isLoading || isPendingUpdate || isPendingGenerate} />
     </div>
   );
 }

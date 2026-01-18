@@ -7,7 +7,7 @@ type MainLayoutProps = PropsWithChildren;
 export const MainLayout = ({ children }: MainLayoutProps) => {
   return (
     <>
-      <div className="bg-background min-h-screen">
+      <div className="bg-background">
         {/* Header */}
         <Header />
         {/* Main Content */}

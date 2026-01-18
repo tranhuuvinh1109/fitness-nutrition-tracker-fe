@@ -21,5 +21,7 @@ export type UserProfileType = {
     goal: string;
     target_weight: number;
     weekly_workout_days: number;
+    target_date?: string;
+    available_workout_time_min?: number;
   };
 };

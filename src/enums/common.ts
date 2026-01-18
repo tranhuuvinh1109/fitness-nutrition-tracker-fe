@@ -7,3 +7,15 @@ export enum E_WORKOUT_STATUS {
   COMPLETED = 1,
   SKIPPED = 2,
 }
+
+export enum E_MEAL_TYPE {
+  BREAKFAST = "breakfast",
+  LUNCH = "lunch",
+  DINNER = "dinner",
+  SNACK = "snack",
+}
+
+export enum E_MESSAGE_ROLE {
+  USER = "AIRoleEnum.user",
+  AI = "AIRoleEnum.ai",
+}

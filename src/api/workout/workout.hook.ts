@@ -1,6 +1,6 @@
 import { QUERY_KEYS } from "@/constants";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { getAllWorkout, workoutSuggestions } from "./workout.api";
+import { getAllWorkout, updateStatusWorkout, workoutSuggestions } from "./workout.api";
 
 export const useGetAllWorkouts = ({
   start_day,
@@ -22,5 +22,11 @@ export const useGetAllWorkouts = ({
 export const useWorkoutSuggestions = () => {
   return useMutation({
     mutationFn: workoutSuggestions,
+  });
+};
+
+export const useUpdateStatusWorkout = () => {
+  return useMutation({
+    mutationFn: updateStatusWorkout,
   });
 };
