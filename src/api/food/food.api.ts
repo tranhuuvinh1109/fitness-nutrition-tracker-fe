@@ -1,11 +1,13 @@
 import { API_ROUTES } from "@/constants/apiRoute";
 import axiosClient from "../axiosInstant";
 import {
+    CreateNewFoodLogPayload,
   CreateNewFoodPayload,
   FoodLogsResponseDataType,
   FoodSuggestionPayload,
   GetAllFoodLogPayload,
 } from "./food.type";
+import { FoodLogItemType } from "@/types";
 
 export const createFood = async (data: CreateNewFoodPayload) => {
   const response = await axiosClient.post(API_ROUTES.FOODS, { ...data, is_vietnamese: true });
@@ -18,7 +20,7 @@ export const getFoodSuggestions = async (data: FoodSuggestionPayload) => {
 };
 
 export const getAllFoodLog = async ({ start_day, end_day }: GetAllFoodLogPayload) => {
-  try {
+
     const response = await axiosClient.get<FoodLogsResponseDataType>(API_ROUTES.FOOD_LOGS, {
       params: {
         start_day,
@@ -26,7 +28,11 @@ export const getAllFoodLog = async ({ start_day, end_day }: GetAllFoodLogPayload
       },
     });
     return response.data;
-  } catch (error) {
-    console.error("Error fetching food logs:", error);
-  }
+
+};
+
+
+export const createNewFoodLog = async (data: CreateNewFoodLogPayload) => {
+    const response = await axiosClient.post<FoodLogItemType>(API_ROUTES.FOOD_LOGS, data);
+    return response.data;
 };

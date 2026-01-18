@@ -17,5 +17,16 @@ export type GetAllFoodLogPayload = {
   end_day?: string;
 };
 
+
+export type CreateNewFoodLogPayload = {
+  name: string;
+  log_date: string;
+  meal_type: E_MEAL_TYPE;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
 export type FoodLogsResponseDataType = FoodLogItemType[];
 export type FoodLogsResponseType = ApiReponseType<FoodLogsResponseDataType>;

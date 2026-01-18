@@ -1,6 +1,6 @@
 import { QUERY_KEYS } from "@/constants";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createFood, getAllFoodLog, getFoodSuggestions } from "./food.api";
+import { createFood, createNewFoodLog, getAllFoodLog, getFoodSuggestions } from "./food.api";
 
 export const useCreateFood = () => {
   return useMutation({
@@ -26,5 +26,11 @@ export const useGetAllFoodLog = ({
     queryFn: () => getAllFoodLog({ start_day, end_day }),
     refetchOnMount: false,
     refetchOnWindowFocus: false,
+  });
+};
+
+export const useCreateNewFoodLog = () => {
+  return useMutation({
+    mutationFn: createNewFoodLog,
   });
 };

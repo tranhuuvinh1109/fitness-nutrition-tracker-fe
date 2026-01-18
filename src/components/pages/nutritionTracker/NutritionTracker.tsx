@@ -1,5 +1,5 @@
 "use client";
-import { useCreateFood, useFoodSuggestion, useGetAllFoodLog } from "@/api";
+import { useCreateFood, useCreateNewFoodLog, useFoodSuggestion, useGetAllFoodLog } from "@/api";
 import {
   Button,
   Card,
@@ -73,8 +73,6 @@ interface AddFoodLogProps {
 const AddFoodLog = ({ meal, onSuccess, dayPlan }: AddFoodLogProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [addMethod, setAddMethod] = useState<AddMethod>("manual");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [mealType, setMealType] = useState<E_MEAL_TYPE>(meal);
   const [formData, setFormData] = useState<FoodItemType>({
     name: "",
     calories: 0,
@@ -82,10 +80,8 @@ const AddFoodLog = ({ meal, onSuccess, dayPlan }: AddFoodLogProps) => {
     carbs: 0,
     fat: 0,
   });
-  const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
 
-  const { mutate: createFood, isPending: isPendingCreate } = useCreateFood();
+  const { mutate: createFood, isPending: isPendingCreate } = useCreateNewFoodLog();
   const { mutate: createFoodSuggestions, isPending: isPendingSuggestion } = useFoodSuggestion();
 
   const isPending = isPendingCreate || isPendingSuggestion;
@@ -98,8 +94,6 @@ const AddFoodLog = ({ meal, onSuccess, dayPlan }: AddFoodLogProps) => {
       carbs: 0,
       fat: 0,
     });
-    setSearchResults([]);
-    setSearchQuery("");
   };
 
   const handleManualAdd = () => {
@@ -109,46 +103,49 @@ const AddFoodLog = ({ meal, onSuccess, dayPlan }: AddFoodLogProps) => {
     }
 
     createFood(
-      { ...formData, meal_type: mealType } as any,
+      {
+        name: formData.name,
+        log_date: dayPlan ?? dayjs().format("YYYY-MM-DD"),
+        meal_type: meal,
+        calories: formData.calories,
+        protein: formData.protein ?? 0,
+        carbs: formData.carbs ?? 0,
+        fat: formData.fat ?? 0,
+      },
       {
         onSuccess: (data) => {
-          toast.success("Đã tạo món ăn thành công.");
+          toast.success("Đã thêm món ăn thành công.");
           resetForm();
           setIsOpen(false);
           onSuccess?.();
         },
         onError: (err) => {
-          toast.error("Tạo món ăn thất bại.");
+          toast.error("Thêm món ăn thất bại.");
           console.log(err);
         },
       }
     );
   };
 
-  const handleAITextAdd = async () => {
-    // Logic for AI analysis would go here
-  };
-
-  const handleSearch = () => {
-    if (!searchQuery.trim()) return;
-    console.log("Tìm kiếm món ăn:", searchQuery);
-  };
-
-  const handleSelectFromSearch = (food: SearchResultItem) => {
-    setFormData({
-      name: food.name,
-      calories: food.calories,
-      protein: food.protein,
-      carbs: food.carbs,
-      fat: food.fat,
-    });
-    setAddMethod("manual");
+  const getMealLabel = (meal: E_MEAL_TYPE) => {
+    switch (meal) {
+      case E_MEAL_TYPE.BREAKFAST:
+        return "Bữa sáng";
+      case E_MEAL_TYPE.LUNCH:
+        return "Bữa trưa";
+      case E_MEAL_TYPE.DINNER:
+        return "Bữa tối";
+      case E_MEAL_TYPE.SNACK:
+        return "Bữa phụ";
+      default:
+        return "Bữa phụ";
+    }
   };
 
   const handleAIAdd = () => {
 
     createFoodSuggestions(
-      { dayPlan: dayPlan ?? dayjs().format("YYYY-MM-DD"), meal_type: mealType },
+      { dayPlan: dayPlan ?? dayjs().format("YYYY-MM-DD"), meal_type: meal },
       {
         onSuccess: (data) => {
           toast.success("Đã tạo món ăn thành công.");
@@ -189,18 +186,7 @@ const AddFoodLog = ({ meal, onSuccess, dayPlan }: AddFoodLogProps) => {
 
           <TabsContent value="manual" className="space-y-4">
             <div className="space-y-2">
-              <Label>Bữa ăn</Label>
-              <Select value={mealType} onValueChange={(v: any) => setMealType(v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={E_MEAL_TYPE.BREAKFAST}>Bữa sáng</SelectItem>
-                  <SelectItem value={E_MEAL_TYPE.LUNCH}>Bữa trưa</SelectItem>
-                  <SelectItem value={E_MEAL_TYPE.DINNER}>Bữa tối</SelectItem>
-                  <SelectItem value={E_MEAL_TYPE.SNACK}>Bữa phụ</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>{getMealLabel(meal)}</Label>
             </div>
 
             <div className="space-y-2">
@@ -259,24 +245,16 @@ const AddFoodLog = ({ meal, onSuccess, dayPlan }: AddFoodLogProps) => {
 
           <TabsContent value="ai" className="space-y-4">
             <div className="space-y-2">
-              <Label>Bữa ăn</Label>
-              <Select value={mealType} onValueChange={(v: any) => setMealType(v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={E_MEAL_TYPE.BREAKFAST}>Bữa sáng</SelectItem>
-                  <SelectItem value={E_MEAL_TYPE.LUNCH}>Bữa trưa</SelectItem>
-                  <SelectItem value={E_MEAL_TYPE.DINNER}>Bữa tối</SelectItem>
-                  <SelectItem value={E_MEAL_TYPE.SNACK}>Bữa phụ</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>{getMealLabel(meal)}</Label>
+              <p>
+                AI sẽ phân tích đề xuất ra một món ăn phù hợp với bạn
+              </p>
             </div>
 
 
 
-            <Button onClick={handleAIAdd} className="w-full" disabled={isProcessing}>
-              {isProcessing ? "Đang xử lý..." : "Phân tích bằng AI"}
+            <Button onClick={handleAIAdd} className="w-full" disabled={isPendingSuggestion}>
+              {isPendingSuggestion ? "Đang xử lý..." : "Đề xuất"}
             </Button>
           </TabsContent>
 
@@ -299,8 +277,6 @@ export function NutritionTracker() {
   });
 
   const handleDelete = (id: string) => {
-    console.log("Xóa món ăn id:", id);
-    // TODO: Xóa thật trên backend + cập nhật state
     toast.success("Đã xóa món ăn");
     refetch();
   };
@@ -451,11 +427,11 @@ export function NutritionTracker() {
                               Chưa có món ăn nào
                             </p>
                           ) : (
-                            <div className="space-y-2">
+                            <div className="space-y-2 bg-white">
                               {logsForMeal.map((entry) => (
                                 <div
                                   key={entry.id}
-                                  className="flex items-center justify-between rounded-md border bg-background p-2 text-sm"
+                                  className="flex items-center justify-between rounded-md border p-2 text-sm"
                                 >
                                   <div>
                                     <p className="font-medium">{entry.name}</p>

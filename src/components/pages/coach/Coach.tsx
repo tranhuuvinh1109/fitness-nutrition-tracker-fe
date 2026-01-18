@@ -104,15 +104,8 @@ export function AICoach() {
       }
     }, [messageData]);
 
-    useEffect(() => {
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = "auto";
-      };
-    }, []);
-
   return (
-    <div className="h-[calc(100vh-180px)] overflow-hidden flex flex-col bg-white rounded-xl ">
+    <div className="overflow-hidden flex flex-col bg-white rounded-xl fixed bottom-0 right-0 left-0 top-[128px] mx-4 mb-4">
       {/* Chat Interface */}
       <Card className="flex h-[600px] flex-col overflow-hidden border-none gap-1">
         <CardHeader className="p-3 pb-0">
@@ -167,7 +160,7 @@ export function AICoach() {
         </CardContent>
       </Card>
         <div className="border-t p-6 bg-white">
-            {messages.length <= 10 && (
+            {messages.length <= 4 && (
             <div className="">
               <p className="mb-1 text-sm text-muted-foreground">Câu hỏi gợi ý:</p>
               <div className="flex flex-wrap gap-2">

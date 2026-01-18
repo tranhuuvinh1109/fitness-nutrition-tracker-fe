@@ -1,6 +1,7 @@
 import { API_ROUTES } from "@/constants/apiRoute";
 import axiosClient from "../axiosInstant";
 import { WorkoutLogsReponseDataType, WorkoutLogsReponseType } from "./workout.type";
+import { E_WORKOUT_STATUS } from "@/enums";
 
 export const getAllWorkout = async ({
   start_day,
@@ -25,7 +26,25 @@ export const getAllWorkout = async ({
   }
 };
 
-export const workoutSuggestions = async () => {
-  const response = await axiosClient.post(API_ROUTES.WORKOUT_SUGGESTIONS);
+export const workoutSuggestions = async ({
+    start_day,
+    end_day,
+}: {
+    start_day?: string;
+    end_day?: string;
+}) => {
+  const response = await axiosClient.post(API_ROUTES.WORKOUT_SUGGESTIONS, {
+    start_day,
+    end_day,
+  });
   return response.data;
+};
+
+
+export const updateStatusWorkout = async (data: {
+    workout_log_id: string;
+    status: E_WORKOUT_STATUS;
+}) => {
+    const response = await axiosClient.put(API_ROUTES.WORKOUT_LOGS , data);
+    return response.data;
 };
