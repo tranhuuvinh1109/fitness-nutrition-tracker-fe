@@ -14,3 +14,5 @@ export * from "./dialog";
 export * from "./textarea";
 export * from "./badge";
 export * from "./accordion";
+export * from "./scrollArea";
+export * from "./thinking";

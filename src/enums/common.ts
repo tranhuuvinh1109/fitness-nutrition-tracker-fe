@@ -14,3 +14,8 @@ export enum E_MEAL_TYPE {
   DINNER = "dinner",
   SNACK = "snack",
 }
+
+export enum E_MESSAGE_ROLE {
+  USER = "AIRoleEnum.user",
+  AI = "AIRoleEnum.ai",
+}

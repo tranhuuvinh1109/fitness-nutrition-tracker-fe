@@ -8,6 +8,8 @@ import {
   updateUserProfile,
   getNutritionAnalytics,
   getWorkoutAnalytics,
+  askAI,
+  getAllMessages,
   //   registerGuestToken,
   //   requestPasswordReset,
   //   upgradeUser,
@@ -54,6 +56,21 @@ export const useWorkoutAnalytics = (mode: number) => {
   return useQuery({
     queryKey: [QUERY_KEYS.WORKOUT_ANALYTICS, mode],
     queryFn: () => getWorkoutAnalytics(mode),
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useAskAI = () => {
+  return useMutation({
+    mutationFn: askAI,
+  });
+};
+
+export const useGetAllMessages = () => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.AI_MESSAGES],
+    queryFn: getAllMessages,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
   });

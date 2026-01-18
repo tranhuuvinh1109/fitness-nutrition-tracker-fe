@@ -9,6 +9,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  LoadingPage,
 } from "@/components/ui";
 import dayjs from "dayjs";
 import { E_WORKOUT_STATUS } from "@/enums";
@@ -39,13 +40,15 @@ export function WorkoutTracker() {
 
   const router = useRouter();
 
-  const { data: workoutLogsData, refetch } = useGetAllWorkouts({
+  const { data: workoutLogsData, refetch, isLoading: isLoadingLogs } = useGetAllWorkouts({
     start_day: startDay,
     end_day: endDay,
   });
 
-  const { mutate: generateWorkoutSuggestions, isPending: isPendingGenrate } =
+  const { mutate: generateWorkoutSuggestions, isPending: isPendingGenerate } =
     useWorkoutSuggestions();
+
+  const isLoading = isLoadingLogs || isPendingGenerate;
   const { user } = useApp();
 
   const handleGeneratePlan = () => {
@@ -242,8 +245,8 @@ export function WorkoutTracker() {
               <CardDescription>Được cá nhân hóa dựa trên mục tiêu của bạn</CardDescription>
             </div>
             {!workoutLogsData?.length && (
-              <Button onClick={handleGeneratePlan} disabled={isPendingGenrate} className="gap-2">
-                {isPendingGenrate ? (
+              <Button onClick={handleGeneratePlan} disabled={isPendingGenerate} className="gap-2">
+                {isPendingGenerate ? (
                   <>
                     <RefreshCw className="h-4 w-4 animate-spin" />
                     Đang tạo...
@@ -259,7 +262,7 @@ export function WorkoutTracker() {
           </div>
         </CardHeader>
         <CardContent>
-          {isPendingGenrate ? (
+          {isPendingGenerate ? (
             <div className="space-y-4 py-12 text-center">
               <div className="flex justify-center">
                 <div className="relative">
@@ -413,6 +416,7 @@ export function WorkoutTracker() {
           )}
         </CardContent>
       </Card>
+      <LoadingPage isOpen={isLoading} />
     </div>
   );
 }

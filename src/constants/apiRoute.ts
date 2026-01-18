@@ -10,4 +10,6 @@ export const API_ROUTES = {
   FOOD_LOGS: "/food-logs",
   ANALYTICS_CALO: "/analytics/calo",
   ANALYTICS_WORKOUT: "/analytics/workout",
+  AI_ASK: "/ai-messages/ask",
+  AI_MESSAGES: "/ai-messages",
 };

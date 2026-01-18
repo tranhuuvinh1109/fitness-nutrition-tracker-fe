@@ -31,6 +31,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
+  LoadingPage,
 } from "@/components/ui";
 import { useGetUserInfo, useNutritionAnalytics, useWorkoutAnalytics } from "@/api/user/user.hook";
 import dayjs from "dayjs";
@@ -39,9 +40,11 @@ export function ProgressTracker() {
   const [timeRange, setTimeRange] = React.useState<"week" | "month">("week");
   const mode = timeRange === "week" ? 7 : 30;
 
-  const { data: userInfo } = useGetUserInfo();
-  const { data: nutritionStats } = useNutritionAnalytics(mode);
-  const { data: workoutStats } = useWorkoutAnalytics(mode);
+  const { data: userInfo, isLoading: isLoadingUser } = useGetUserInfo();
+  const { data: nutritionStats, isLoading: isLoadingNutrition } = useNutritionAnalytics(mode);
+  const { data: workoutStats, isLoading: isLoadingWorkout } = useWorkoutAnalytics(mode);
+
+  const isLoading = isLoadingUser || isLoadingNutrition || isLoadingWorkout;
 
   const profile = userInfo?.user.profile;
   const target = profile?.target;
@@ -208,6 +211,7 @@ export function ProgressTracker() {
 
 
       </Tabs>
+      <LoadingPage isOpen={isLoading} />
     </div>
   );
 }

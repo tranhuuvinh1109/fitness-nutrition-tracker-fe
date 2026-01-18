@@ -14,7 +14,10 @@ import {
   VerifyTempPasswordRequestType,
   NutritionAnalyticsType,
   WorkoutAnalyticsType,
+  AskAIRequest,
+  AskAIResponse,
 } from "./user.type";
+import { MessageItemType } from "@/types/message.type";
 
 export const getUserInfo = async () => {
   try {
@@ -43,26 +46,6 @@ export const updateUserProfile = async (payload: UpdateProfilePayload) => {
   return response.data;
 };
 
-// export const registerGuestToken = async () => {
-//   const response = await axiosClient.post<RegisterGuestTokenDataType>(API_ROUTES.GUEST);
-//   return response.data;
-// };
-
-// export const requestPasswordReset = async (payload: RequestPasswordResetRequestType) => {
-//   const response = await axiosClient.post(API_ROUTES.REQUEST_PASSWORD_RESET, payload);
-//   return response.data;
-// };
-
-// export const verifyPassword = async (payload: VerifyTempPasswordRequestType) => {
-//   const response = await axiosClient.post(API_ROUTES.VERIFY_PASSWORD, payload);
-//   return response.data;
-// };
-
-// export const changePassword = async (payload: ChangePasswordRequestType) => {
-//   const response = await axiosClient.post(API_ROUTES.CHANGE_PASSWORD, payload);
-//   return response.data;
-// };
-
 export const getNutritionAnalytics = async (mode: number) => {
   const response = await axiosClient.get<NutritionAnalyticsType[]>(API_ROUTES.ANALYTICS_CALO, {
     params: { mode },
@@ -70,9 +53,20 @@ export const getNutritionAnalytics = async (mode: number) => {
   return response.data;
 };
 
-export const getWorkoutAnalytics = async (mode: number) => {
-  const response = await axiosClient.get<WorkoutAnalyticsType[]>(API_ROUTES.ANALYTICS_WORKOUT, {
+export const getWorkoutAnalytics = async (mode: number): Promise<WorkoutAnalyticsType[]> => {
+  const { data } = await axiosClient.get(API_ROUTES.ANALYTICS_WORKOUT, {
     params: { mode },
   });
+  return data;
+};
+
+export const askAI = async (data: AskAIRequest)=> {
+  const response = await axiosClient.post<MessageItemType>(API_ROUTES.AI_ASK, data);
+  return response.data;
+};
+
+
+export const getAllMessages = async () => {
+  const response = await axiosClient.get<MessageItemType[]>(API_ROUTES.AI_MESSAGES);
   return response.data;
 };

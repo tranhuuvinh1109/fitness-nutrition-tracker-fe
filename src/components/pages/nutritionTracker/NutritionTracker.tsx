@@ -28,6 +28,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
+  LoadingPage,
 } from "@/components/ui";
 import { E_MEAL_TYPE } from "@/enums";
 import { FoodEntry, FoodItemType } from "@/types";
@@ -84,8 +85,10 @@ const AddFoodLog = ({ meal, onSuccess, dayPlan }: AddFoodLogProps) => {
   const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { mutate: createFood } = useCreateFood();
-  const { mutate: createFoodSuggestions } = useFoodSuggestion();
+  const { mutate: createFood, isPending: isPendingCreate } = useCreateFood();
+  const { mutate: createFoodSuggestions, isPending: isPendingSuggestion } = useFoodSuggestion();
+
+  const isPending = isPendingCreate || isPendingSuggestion;
 
   const resetForm = () => {
     setFormData({
@@ -279,6 +282,7 @@ const AddFoodLog = ({ meal, onSuccess, dayPlan }: AddFoodLogProps) => {
 
         </Tabs>
       </DialogContent>
+      <LoadingPage isOpen={isPending} />
     </Dialog>
   );
 };
@@ -289,7 +293,7 @@ export function NutritionTracker() {
   const startDay = currentWeek.startOf("isoWeek").format("YYYY-MM-DD");
   const endDay = currentWeek.endOf("isoWeek").format("YYYY-MM-DD");
 
-  const { data: foodLogs, refetch } = useGetAllFoodLog({
+  const { data: foodLogs, refetch, isLoading } = useGetAllFoodLog({
     start_day: startDay,
     end_day: endDay,
   });
@@ -484,6 +488,7 @@ export function NutritionTracker() {
           );
         })}
       </Accordion>
+      <LoadingPage isOpen={isLoading} />
     </div>
   );
 }

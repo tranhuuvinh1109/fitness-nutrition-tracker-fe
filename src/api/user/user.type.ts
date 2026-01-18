@@ -73,3 +73,15 @@ export type WorkoutAnalyticsType = {
   day: string;
   duration_min: number;
 };
+
+export type AskAIRequest = {
+  message: string;
+};
+
+export type AskAIResponse = {
+  content: string;
+  created_at: string;
+  id: string;
+  role: string;
+  user_id: string;
+};
