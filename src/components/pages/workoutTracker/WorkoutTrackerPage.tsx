@@ -19,7 +19,22 @@ import { toast } from "sonner";
 import { getStatusColor, getStatusLabel } from "@/lib/utils/calculations";
 import { useRouter } from "next/navigation";
 import { DatePicker } from "antd";
-import { Calendar as CalendarIcon, Calendar, Check, CheckCircle2, Circle, Clock, Flame, Plus, RefreshCw, Sparkles, X, XCircle } from "lucide-react";
+import {
+  Calendar as CalendarIcon,
+  Calendar,
+  Check,
+  CheckCircle2,
+  Circle,
+  Clock,
+  Flame,
+  Plus,
+  RefreshCw,
+  Sparkles,
+  X,
+  XCircle,
+  Video,
+  ExternalLink,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 dayjs.extend(isoWeek);
 
@@ -31,7 +46,11 @@ export function WorkoutTracker() {
 
   const router = useRouter();
 
-  const { data: workoutLogsData, refetch, isLoading: isLoadingLogs } = useGetAllWorkouts({
+  const {
+    data: workoutLogsData,
+    refetch,
+    isLoading: isLoadingLogs,
+  } = useGetAllWorkouts({
     start_day: startDay,
     end_day: endDay,
   });
@@ -55,19 +74,22 @@ export function WorkoutTracker() {
       toast.error("Vui lòng điền thông tin");
       return;
     }
-    generateWorkoutSuggestions({
+    generateWorkoutSuggestions(
+      {
         start_day: startDay,
         end_day: endDay,
-    }, {
-      onSuccess: (data) => {
-        toast.success("Đã tạo kế hoạch tập luyện!");
-        refetch();
       },
-      onError: (err) => {
-        console.log(err);
-        toast.error("Có lỗi xảy ra khi tạo kế hoạch");
-      },
-    });
+      {
+        onSuccess: (data) => {
+          toast.success("Đã tạo kế hoạch tập luyện!");
+          refetch();
+        },
+        onError: (err) => {
+          console.log(err);
+          toast.error("Có lỗi xảy ra khi tạo kế hoạch");
+        },
+      }
+    );
   };
 
   const formatDate = (dateStr: string) => {
@@ -113,21 +135,23 @@ export function WorkoutTracker() {
     );
   }, [sortedWorkoutLogs]);
 
-
   const handleUpdateStatusWorkout = (workoutLogId: string, status: E_WORKOUT_STATUS) => {
-    updateStatusWorkout({
-      workout_log_id: workoutLogId,
-      status,
-    }, {
-      onSuccess: () => {
-        toast.success("Đã cập nhật trạng thái!");
-        refetch();
+    updateStatusWorkout(
+      {
+        workout_log_id: workoutLogId,
+        status,
       },
-      onError: (err) => {
-        console.log(err);
-        toast.error("Có lỗi xảy ra khi cập nhật trạng thái");
-      },
-    });
+      {
+        onSuccess: () => {
+          toast.success("Đã cập nhật trạng thái!");
+          refetch();
+        },
+        onError: (err) => {
+          console.log(err);
+          toast.error("Có lỗi xảy ra khi cập nhật trạng thái");
+        },
+      }
+    );
   };
 
   return (
@@ -139,7 +163,7 @@ export function WorkoutTracker() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 rounded-lg border bg-card p-1">
+          <div className="bg-card flex items-center gap-2 rounded-lg border p-1">
             <CalendarIcon className="text-muted-foreground ml-2 h-4 w-4" />
             <DatePicker
               picker="week"
@@ -322,6 +346,20 @@ export function WorkoutTracker() {
                                 <Flame className="h-3.5 w-3.5 text-orange-500" />
                                 <span>{item.calories_burned} kcal</span>
                               </div>
+                              {item?.workout_metadata?.link_reference && (
+                                <div>
+                                  <a
+                                    href={item.workout_metadata.link_reference}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary flex items-center gap-1 hover:underline"
+                                  >
+                                    <Video className="h-3.5 w-3.5" />
+                                    <span>Hướng dẫn</span>
+                                    <ExternalLink className="h-3 w-3" />
+                                  </a>
+                                </div>
+                              )}
                             </div>
 
                             {item.status === E_WORKOUT_STATUS.PLANNED && (
@@ -329,7 +367,9 @@ export function WorkoutTracker() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => handleUpdateStatusWorkout(item.id, E_WORKOUT_STATUS.COMPLETED)}
+                                  onClick={() =>
+                                    handleUpdateStatusWorkout(item.id, E_WORKOUT_STATUS.COMPLETED)
+                                  }
                                   className="h-8 gap-1"
                                 >
                                   <Check className="h-3.5 w-3.5" />
@@ -338,7 +378,9 @@ export function WorkoutTracker() {
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  onClick={() => handleUpdateStatusWorkout(item.id, E_WORKOUT_STATUS.SKIPPED)}
+                                  onClick={() =>
+                                    handleUpdateStatusWorkout(item.id, E_WORKOUT_STATUS.SKIPPED)
+                                  }
                                   className="h-8 gap-1"
                                 >
                                   <X className="h-3.5 w-3.5" />
