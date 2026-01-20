@@ -1,5 +1,11 @@
 "use client";
-import { useCreateFood, useCreateNewFoodLog, useFoodSuggestion, useGetAllFoodLog } from "@/api";
+import {
+  useCreateFood,
+  useCreateNewFoodLog,
+  useDeleteFoodLog,
+  useFoodSuggestion,
+  useGetAllFoodLog,
+} from "@/api";
 import {
   Button,
   Card,
@@ -29,11 +35,30 @@ import {
   AccordionItem,
   AccordionTrigger,
   LoadingPage,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui";
 import { E_MEAL_TYPE } from "@/enums";
 import { FoodEntry, FoodItemType } from "@/types";
 import dayjs from "dayjs";
-import { Apple, Camera, Coffee, Cookie, Plus, Search, Sparkles, Trash2, UtensilsCrossed, Calendar as CalendarIcon } from "lucide-react";
+import {
+  Apple,
+  Camera,
+  Coffee,
+  Cookie,
+  Plus,
+  Search,
+  Sparkles,
+  Trash2,
+  UtensilsCrossed,
+  Calendar as CalendarIcon,
+} from "lucide-react";
 import React, { ChangeEvent, useState } from "react";
 import { toast } from "sonner";
 import { DatePicker } from "antd";
@@ -68,9 +93,10 @@ interface AddFoodLogProps {
   meal: E_MEAL_TYPE;
   onSuccess?: () => void;
   dayPlan?: string;
+  length?: number;
 }
 
-const AddFoodLog = ({ meal, onSuccess, dayPlan }: AddFoodLogProps) => {
+const AddFoodLog = ({ meal, onSuccess, dayPlan, length }: AddFoodLogProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [addMethod, setAddMethod] = useState<AddMethod>("manual");
   const [formData, setFormData] = useState<FoodItemType>({
@@ -143,7 +169,6 @@ const AddFoodLog = ({ meal, onSuccess, dayPlan }: AddFoodLogProps) => {
   };
 
   const handleAIAdd = () => {
-
     createFoodSuggestions(
       { dayPlan: dayPlan ?? dayjs().format("YYYY-MM-DD"), meal_type: meal },
       {
@@ -246,18 +271,13 @@ const AddFoodLog = ({ meal, onSuccess, dayPlan }: AddFoodLogProps) => {
           <TabsContent value="ai" className="space-y-4">
             <div className="space-y-2">
               <Label>{getMealLabel(meal)}</Label>
-              <p>
-                AI sẽ phân tích đề xuất ra một món ăn phù hợp với bạn
-              </p>
+              <p>AI sẽ phân tích đề xuất ra một món ăn phù hợp với bạn</p>
             </div>
-
-
 
             <Button onClick={handleAIAdd} className="w-full" disabled={isPendingSuggestion}>
               {isPendingSuggestion ? "Đang xử lý..." : "Đề xuất"}
             </Button>
           </TabsContent>
-
         </Tabs>
       </DialogContent>
       <LoadingPage isOpen={isPending} />
@@ -267,18 +287,36 @@ const AddFoodLog = ({ meal, onSuccess, dayPlan }: AddFoodLogProps) => {
 
 export function NutritionTracker() {
   const [currentWeek, setCurrentWeek] = useState<dayjs.Dayjs>(dayjs());
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const startDay = currentWeek.startOf("isoWeek").format("YYYY-MM-DD");
   const endDay = currentWeek.endOf("isoWeek").format("YYYY-MM-DD");
 
-  const { data: foodLogs, refetch, isLoading } = useGetAllFoodLog({
+  const {
+    data: foodLogs,
+    refetch,
+    isLoading,
+  } = useGetAllFoodLog({
     start_day: startDay,
     end_day: endDay,
   });
 
-  const handleDelete = (id: string) => {
-    toast.success("Đã xóa món ăn");
-    refetch();
+  const { mutateAsync: deleteFoodLog } = useDeleteFoodLog();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    setIsDeleting(true);
+    try {
+      await deleteFoodLog({ id: deleteId });
+      toast.success("Đã xóa món ăn");
+      refetch();
+    } catch (error) {
+      toast.error("Xóa món ăn thất bại");
+    } finally {
+      setIsDeleting(false);
+      setDeleteId(null);
+    }
   };
 
   const weekDays = Array.from({ length: 7 }, (_, i) =>
@@ -334,7 +372,7 @@ export function NutritionTracker() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 rounded-lg border bg-card p-1">
+          <div className="bg-card flex items-center gap-2 rounded-lg border p-1">
             <CalendarIcon className="text-muted-foreground ml-2 h-4 w-4" />
             <DatePicker
               picker="week"
@@ -384,7 +422,7 @@ export function NutritionTracker() {
           const dayCalories = logsForDay.reduce((sum, log) => sum + log.calories, 0);
 
           return (
-            <AccordionItem key={day} value={day} className="rounded-lg border bg-card px-4">
+            <AccordionItem key={day} value={day} className="bg-card rounded-lg border px-4">
               <AccordionTrigger className="hover:no-underline">
                 <div className="flex w-full items-center justify-between pr-4">
                   <div className="flex flex-col items-start gap-1">
@@ -400,12 +438,14 @@ export function NutritionTracker() {
               </AccordionTrigger>
               <AccordionContent className="pt-4 pb-6">
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                  {([
-                    E_MEAL_TYPE.BREAKFAST,
-                    E_MEAL_TYPE.LUNCH,
-                    E_MEAL_TYPE.DINNER,
-                    E_MEAL_TYPE.SNACK,
-                  ] as const).map((meal) => {
+                  {(
+                    [
+                      E_MEAL_TYPE.BREAKFAST,
+                      E_MEAL_TYPE.LUNCH,
+                      E_MEAL_TYPE.DINNER,
+                      E_MEAL_TYPE.SNACK,
+                    ] as const
+                  ).map((meal) => {
                     const logsForMeal = logsForDay.filter((log) => log.meal_type === meal);
                     const mealCalories = logsForMeal.reduce((sum, log) => sum + log.calories, 0);
 
@@ -418,7 +458,9 @@ export function NutritionTracker() {
                             <span className="text-muted-foreground ml-auto text-sm font-normal">
                               {mealCalories} kcal
                             </span>
-                            <AddFoodLog meal={meal} dayPlan={day} onSuccess={refetch} />
+                            {logsForMeal?.length === 0 && (
+                              <AddFoodLog meal={meal} dayPlan={day} onSuccess={refetch} />
+                            )}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="pb-4">
@@ -445,7 +487,7 @@ export function NutritionTracker() {
                                       variant="ghost"
                                       size="icon"
                                       className="h-8 w-8"
-                                      onClick={() => handleDelete(entry.id!)}
+                                      onClick={() => setDeleteId(entry.id!)}
                                     >
                                       <Trash2 className="text-destructive h-4 w-4" />
                                     </Button>
@@ -464,7 +506,32 @@ export function NutritionTracker() {
           );
         })}
       </Accordion>
-      <LoadingPage isOpen={isLoading} />
+      <LoadingPage isOpen={isLoading || isDeleting} />
+
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn xóa món ăn này khỏi nhật ký không? Hành động này không thể hoàn
+              tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                confirmDelete();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isDeleting}
+            >
+              Xóa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

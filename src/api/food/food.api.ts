@@ -1,7 +1,7 @@
 import { API_ROUTES } from "@/constants/apiRoute";
 import axiosClient from "../axiosInstant";
 import {
-    CreateNewFoodLogPayload,
+  CreateNewFoodLogPayload,
   CreateNewFoodPayload,
   FoodLogsResponseDataType,
   FoodSuggestionPayload,
@@ -20,19 +20,21 @@ export const getFoodSuggestions = async (data: FoodSuggestionPayload) => {
 };
 
 export const getAllFoodLog = async ({ start_day, end_day }: GetAllFoodLogPayload) => {
-
-    const response = await axiosClient.get<FoodLogsResponseDataType>(API_ROUTES.FOOD_LOGS, {
-      params: {
-        start_day,
-        end_day,
-      },
-    });
-    return response.data;
-
+  const response = await axiosClient.get<FoodLogsResponseDataType>(API_ROUTES.FOOD_LOGS, {
+    params: {
+      start_day,
+      end_day,
+    },
+  });
+  return response.data;
 };
 
-
 export const createNewFoodLog = async (data: CreateNewFoodLogPayload) => {
-    const response = await axiosClient.post<FoodLogItemType>(API_ROUTES.FOOD_LOGS, data);
-    return response.data;
+  const response = await axiosClient.post<FoodLogItemType>(API_ROUTES.FOOD_LOGS, data);
+  return response.data;
+};
+
+export const deleteFoodLog = async ({ id }: { id: string }) => {
+  const response = await axiosClient.delete<FoodLogItemType>(`${API_ROUTES.FOOD_LOGS}/${id}`);
+  return response.data;
 };

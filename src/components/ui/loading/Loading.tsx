@@ -1,36 +1,11 @@
 "use client";
 
 import { Dumbbell, Heart, Activity, Zap } from "lucide-react";
-import { useEffect, useRef } from "react";
 type LoadingPageProps = {
   isOpen?: boolean;
 };
 
 export function LoadingPage({ isOpen }: LoadingPageProps) {
-  const prevStyleRef = useRef<{ height: string; overflow: string } | null>(null);
-
-  useEffect(() => {
-    if (isOpen) {
-      prevStyleRef.current = {
-        height: document.body.style.height,
-        overflow: document.body.style.overflow,
-      };
-
-      document.body.style.height = "100vh";
-      document.body.style.overflow = "hidden";
-    } else if (prevStyleRef.current) {
-      document.body.style.height = prevStyleRef.current.height;
-      document.body.style.overflow = prevStyleRef.current.overflow;
-      prevStyleRef.current = null;
-    }
-
-    return () => {
-      if (prevStyleRef.current) {
-        document.body.style.height = prevStyleRef.current.height;
-        document.body.style.overflow = prevStyleRef.current.overflow;
-      }
-    };
-  }, [isOpen]);
   if (!isOpen) return null;
 
   return (

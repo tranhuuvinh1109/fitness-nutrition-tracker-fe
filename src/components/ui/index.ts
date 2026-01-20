@@ -16,3 +16,4 @@ export * from "./badge";
 export * from "./accordion";
 export * from "./scrollArea";
 export * from "./thinking";
+export * from "./alert/AlertDialog";
