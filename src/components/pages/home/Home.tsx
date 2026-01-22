@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useMemo } from "react";
 
 import { Flame, Target, TrendingDown, TrendingUp, Droplet, Apple, Dumbbell } from "lucide-react";
 import { CalorieRequirements, UserProfile } from "@/types";
@@ -14,30 +14,77 @@ import {
   CardTitle,
 } from "@/components/ui";
 import Link from "next/link";
+import { useGetUserInfo, useNutritionAnalytics, useWorkoutAnalytics } from "@/api/user/user.hook";
 
 export function HomePage() {
-  const profile: UserProfile = {
-    id: "user123",
-    age: 28,
-    gender: "male",
-    weight: 75,
-    height: 180,
-    activityLevel: "sedentary",
-    goal: "lose-weight",
-    createdAt: "",
-    updatedAt: "",
-  };
+  const { data: userData } = useGetUserInfo();
+  const { data: nutritionData } = useNutritionAnalytics(1);
+  const { data: workoutData } = useWorkoutAnalytics(1);
+
   const today = new Date().toISOString().split("T")[0];
-  const [requirements, setRequirements] = React.useState<CalorieRequirements>(
-    calculateCalorieRequirements(profile)
-  );
 
-  const caloriesRemaining = 0;
-  const caloriesProgress = 0;
-  const proteinProgress = 0;
-  const waterProgress = 0;
+  const profile: UserProfile | null = useMemo(() => {
+    if (!userData?.user?.profile) return null;
+    const p = userData.user.profile;
+    return {
+      id: p.user_id,
+      age: p.age,
+      gender: p.gender as "male" | "female",
+      weight: p.weight_kg,
+      height: p.height_cm,
+      activityLevel: p.activity_level as any,
+      goal: p.target.goal as any,
+      createdAt: "",
+      updatedAt: "",
+    };
+  }, [userData]);
 
-  const motivationMessage = 0;
+  const requirements = useMemo(() => {
+    if (!profile)
+      return {
+        bmr: 0,
+        tdee: 0,
+        targetCalories: 0,
+        proteinGrams: 0,
+        carbsGrams: 0,
+        fatGrams: 0,
+      };
+    return calculateCalorieRequirements(profile);
+  }, [profile]);
+
+  const todayNutrition = useMemo(() => {
+    return nutritionData?.find((n) => n.day === today);
+  }, [nutritionData, today]);
+
+  const todayWorkout = useMemo(() => {
+    return workoutData?.find((w) => w.day === today);
+  }, [workoutData, today]);
+
+  const caloriesIn = todayNutrition?.calories || 0;
+  const caloriesBurned = todayWorkout?.calo || 0;
+  const caloriesRemaining = requirements.targetCalories - caloriesIn + caloriesBurned;
+
+  // Progress calculations
+  const caloriesProgress = requirements.targetCalories
+    ? (caloriesIn / requirements.targetCalories) * 100
+    : 0;
+
+  // Macros
+  const proteinCurrent = todayNutrition?.protein || 0;
+  const carbsCurrent = todayNutrition?.carbs || 0;
+  const fatCurrent = todayNutrition?.fat || 0;
+
+  const proteinProgress = requirements.proteinGrams
+    ? (proteinCurrent / requirements.proteinGrams) * 100
+    : 0;
+  const carbsProgress = requirements.carbsGrams
+    ? (carbsCurrent / requirements.carbsGrams) * 100
+    : 0;
+  const fatProgress = requirements.fatGrams ? (fatCurrent / requirements.fatGrams) * 100 : 0;
+
+  const waterProgress = 0; // Water tracking might be separate or missing in current API
+
+  const motivationMessage = "Hãy bắt đầu ngày mới đầy năng lượng!";
 
   return (
     <div className="space-y-6">
@@ -45,7 +92,8 @@ export function HomePage() {
       <div>
         <h1>Bảng điều khiển</h1>
         <p className="text-muted-foreground">
-          Chào {profile.gender === "male" ? "anh" : "chị"}! {motivationMessage}
+          Chào {profile?.gender === "male" ? "anh" : "chị"} {userData?.user?.name}!{" "}
+          {motivationMessage}
         </p>
       </div>
 
@@ -71,21 +119,9 @@ export function HomePage() {
             <Apple className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl">{0}g</div>
+            <div className="text-2xl">{Math.round(proteinCurrent)}g</div>
             <p className="text-muted-foreground text-xs">Mục tiêu: {requirements.proteinGrams}g</p>
             <Progress value={Math.min(100, proteinProgress)} className="mt-2" />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm">Nước uống</CardTitle>
-            <Droplet className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl">{0}L</div>
-            <p className="text-muted-foreground text-xs">Mục tiêu: 2.5L</p>
-            <Progress value={Math.min(100, waterProgress)} className="mt-2" />
           </CardContent>
         </Card>
 
@@ -95,8 +131,8 @@ export function HomePage() {
             <Dumbbell className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl">{0} phút</div>
-            <p className="text-muted-foreground text-xs">Đốt cháy: {0} kcal</p>
+            <div className="text-2xl">{todayWorkout?.duration_min || 0} phút</div>
+            <p className="text-muted-foreground text-xs">Đốt cháy: {caloriesBurned} kcal</p>
             <Progress value={0} className="mt-2" />
           </CardContent>
         </Card>
@@ -115,7 +151,7 @@ export function HomePage() {
                 <TrendingUp className="h-5 w-5 text-green-500" />
                 <span>Calo nạp vào</span>
               </div>
-              <span className="text-xl">{0} kcal</span>
+              <span className="text-xl">{caloriesIn} kcal</span>
             </div>
 
             <div className="flex items-center justify-between">
@@ -123,7 +159,7 @@ export function HomePage() {
                 <TrendingDown className="h-5 w-5 text-red-500" />
                 <span>Calo đốt cháy</span>
               </div>
-              <span className="text-xl">{0} kcal</span>
+              <span className="text-xl">{caloriesBurned} kcal</span>
             </div>
 
             <div className="flex items-center justify-between border-t pt-4">
@@ -131,7 +167,7 @@ export function HomePage() {
                 <Target className="h-5 w-5 text-blue-500" />
                 <span>Chênh lệch</span>
               </div>
-              <span className="text-xl">{0} kcal</span>
+              <span className="text-xl">{Math.round(caloriesIn - caloriesBurned)} kcal</span>
             </div>
           </div>
         </CardContent>
@@ -148,7 +184,7 @@ export function HomePage() {
             <div>
               <div className="mb-2 flex items-center justify-between">
                 <span>Protein</span>
-                <span>{0}g</span>
+                <span>{Math.round(proteinCurrent)}g</span>
               </div>
               <Progress value={Math.min(100, proteinProgress)} className="h-2" />
             </div>
@@ -156,17 +192,17 @@ export function HomePage() {
             <div>
               <div className="mb-2 flex items-center justify-between">
                 <span>Carbs</span>
-                <span>{0}g</span>
+                <span>{Math.round(carbsCurrent)}g</span>
               </div>
-              <Progress value={0} className="h-2" />
+              <Progress value={Math.min(100, carbsProgress)} className="h-2" />
             </div>
 
             <div>
               <div className="mb-2 flex items-center justify-between">
                 <span>Fat</span>
-                <span>{0}g</span>
+                <span>{Math.round(fatCurrent)}g</span>
               </div>
-              <Progress value={0} className="h-2" />
+              <Progress value={Math.min(100, fatProgress)} className="h-2" />
             </div>
           </div>
         </CardContent>

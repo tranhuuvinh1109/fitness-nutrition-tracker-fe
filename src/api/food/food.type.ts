@@ -7,7 +7,7 @@ export type CreateNewFoodDataResponseType = FoodItemType;
 
 export type FoodSuggestionPayload = {
   dayPlan: string;
-  meal_type: E_MEAL_TYPE;
+  meal_type: string;
 };
 
 export type FoodSuggestionDataResponseType = FoodItemType[];
@@ -17,7 +17,6 @@ export type GetAllFoodLogPayload = {
   end_day?: string;
 };
 
-
 export type CreateNewFoodLogPayload = {
   name: string;
   log_date: string;
@@ -26,7 +25,7 @@ export type CreateNewFoodLogPayload = {
   protein: number;
   carbs: number;
   fat: number;
-}
+};
 
 export type FoodLogsResponseDataType = FoodLogItemType[];
 export type FoodLogsResponseType = ApiReponseType<FoodLogsResponseDataType>;

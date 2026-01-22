@@ -32,7 +32,7 @@ export const Header = () => {
           {user && (
             <div className="flex items-center gap-4">
               <span className="text-muted-foreground hidden text-sm sm:inline">
-                {user.name} • {"50"}kg
+                {user.name} • {user.profile?.weight_kg ?? 0}kg
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />

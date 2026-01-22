@@ -1,9 +1,5 @@
-'use client'
-import {
-  Activity,
-  Flame,
-  TrendingUp,
-} from "lucide-react";
+"use client";
+import { Activity, Flame, TrendingUp } from "lucide-react";
 import React from "react";
 import {
   Bar,
@@ -50,20 +46,22 @@ export function ProgressTracker() {
   const target = profile?.target;
 
   // Prepare chart data
-  const calorieData = nutritionStats?.map((nStat) => {
-    const wStat = workoutStats?.find((w) => w.day === nStat.day);
-    return {
-      date: dayjs(nStat.day).format("DD/MM"),
-      "Calo nạp": nStat.calories,
-      "Calo đốt": wStat?.calo || 0,
-      "Mục tiêu": target?.daily_calories || 2000,
-    };
-  }) || [];
+  const calorieData =
+    nutritionStats?.map((nStat) => {
+      return {
+        date: dayjs(nStat.day).format("DD/MM"),
+        "Năng lượng (kcal)": nStat.calories,
+        "Tinh bột (g)": nStat.carbs,
+        "Protein (g)": nStat.protein,
+        "Béo (g)": nStat.fat,
+      };
+    }) || [];
 
-  const workoutData = workoutStats?.map((stat) => ({
-    date: dayjs(stat.day).format("DD/MM"),
-    "Phút tập": stat.duration_min,
-  })) || [];
+  const workoutData =
+    workoutStats?.map((stat) => ({
+      date: dayjs(stat.day).format("DD/MM"),
+      "Phút tập": stat.duration_min,
+    })) || [];
 
   const todayStr = dayjs().format("YYYY-MM-DD");
   const todayStats = nutritionStats?.find((s) => s.day === todayStr) || {
@@ -123,7 +121,9 @@ export function ProgressTracker() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{averageCalories}</div>
-            <p className="text-muted-foreground text-xs">Mục tiêu: {target?.daily_calories || "--"} kcal</p>
+            <p className="text-muted-foreground text-xs">
+              Mục tiêu: {target?.daily_calories || "--"} kcal
+            </p>
           </CardContent>
         </Card>
 
@@ -146,7 +146,9 @@ export function ProgressTracker() {
           <CardContent>
             <div className="text-2xl font-bold">{goalLabels[target?.goal || ""] || "Duy trì"}</div>
             {target?.target_weight && (
-              <p className="text-muted-foreground text-xs">Cân nặng mục tiêu: {target.target_weight} kg</p>
+              <p className="text-muted-foreground text-xs">
+                Cân nặng mục tiêu: {target.target_weight} kg
+              </p>
             )}
           </CardContent>
         </Card>
@@ -162,8 +164,8 @@ export function ProgressTracker() {
         <TabsContent value="calories">
           <Card>
             <CardHeader>
-              <CardTitle>Calo hàng ngày</CardTitle>
-              <CardDescription>Theo dõi calo nạp vào và đốt cháy</CardDescription>
+              <CardTitle>Dinh Dưỡng hàng ngày</CardTitle>
+              <CardDescription>Theo dõi dinh dưỡng nạp của bạn</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={350}>
@@ -173,15 +175,15 @@ export function ProgressTracker() {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="Calo nạp" stroke="#10b981" strokeWidth={2} />
-                  <Line type="monotone" dataKey="Calo đốt" stroke="#ef4444" strokeWidth={2} />
                   <Line
                     type="monotone"
-                    dataKey="Mục tiêu"
-                    stroke="#6b7280"
-                    strokeWidth={1}
-                    strokeDasharray="5 5"
+                    dataKey="Năng lượng (kcal)"
+                    stroke="#10b981"
+                    strokeWidth={2}
                   />
+                  <Line type="monotone" dataKey="Tinh bột (g)" stroke="#3b82f6" strokeWidth={2} />
+                  <Line type="monotone" dataKey="Protein (g)" stroke="#f59e0b" strokeWidth={2} />
+                  <Line type="monotone" dataKey="Béo (g)" stroke="#ef4444" strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
@@ -208,8 +210,6 @@ export function ProgressTracker() {
             </CardContent>
           </Card>
         </TabsContent>
-
-
       </Tabs>
       <LoadingPage isOpen={isLoading} />
     </div>
