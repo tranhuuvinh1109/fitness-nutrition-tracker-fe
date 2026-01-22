@@ -236,6 +236,7 @@ export function UserProfilePage() {
                 <Label htmlFor="goal">Mục tiêu chính</Label>
                 <Select
                   value={formData.target.goal}
+                  defaultValue={formData.target.goal}
                   onValueChange={(v) => updateTargetField("goal", v)}
                 >
                   <SelectTrigger>
