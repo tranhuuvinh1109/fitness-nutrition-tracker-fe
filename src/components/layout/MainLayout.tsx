@@ -1,10 +1,26 @@
-import { PropsWithChildren } from "react";
+import { PropsWithChildren, useEffect, useState } from "react";
 import { Header } from "../header";
 import { Toaster } from "sonner";
+import { DailyHealthCheckModal } from "../DailyHealthCheckModal";
+import { hasAuditLogForToday } from "@/lib/utils/helpers";
+import { useApp } from "@/providers";
 
 type MainLayoutProps = PropsWithChildren;
 
 export const MainLayout = ({ children }: MainLayoutProps) => {
+  const { user } = useApp();
+  const [isHealthCheckOpen, setIsHealthCheckOpen] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const hasLoggedToday = hasAuditLogForToday(user?.profile?.target?.audit_log);
+
+    if (!hasLoggedToday) {
+      setIsHealthCheckOpen(true);
+    }
+  }, [user]);
+
   return (
     <>
       <div className="bg-background">
@@ -27,6 +43,10 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
         </footer>
       </div>
       <Toaster />
+      <DailyHealthCheckModal
+        isOpen={isHealthCheckOpen}
+        onClose={() => setIsHealthCheckOpen(false)}
+      />
     </>
   );
 };

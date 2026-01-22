@@ -243,6 +243,7 @@ export function UserProfilePage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="lose-weight">Giảm cân</SelectItem>
+                    <SelectItem value="gain-weight">Tăng cân</SelectItem>
                     <SelectItem value="gain-muscle">Tăng cơ</SelectItem>
                     <SelectItem value="maintain">Duy trì cân nặng</SelectItem>
                   </SelectContent>

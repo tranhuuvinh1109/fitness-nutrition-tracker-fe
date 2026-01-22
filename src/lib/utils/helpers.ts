@@ -1,4 +1,4 @@
-import { UserProfileType } from "@/types";
+import { UserProfileType, HealthCheckEntryType } from "@/types";
 
 type TargetErrors = {
   main_target?: string;
@@ -59,4 +59,14 @@ export const validateForm = (data: UserProfileType) => {
   }
 
   return errors;
+};
+
+export const hasAuditLogForToday = (auditLog?: HealthCheckEntryType[]): boolean => {
+  if (!auditLog || auditLog.length === 0) {
+    return false;
+  }
+
+  const today = new Date().toISOString().split("T")[0];
+
+  return auditLog.some((entry) => entry.date === today);
 };

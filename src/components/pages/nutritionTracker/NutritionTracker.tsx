@@ -6,6 +6,7 @@ import {
   useFoodSuggestion,
   useGetAllFoodLog,
 } from "@/api";
+import { useGetUserInfo } from "@/api/user/user.hook";
 import {
   Button,
   Card,
@@ -45,7 +46,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui";
 import { E_MEAL_TYPE } from "@/enums";
-import { FoodEntry, FoodItemType } from "@/types";
+import { FoodEntry, FoodItemType, HEALTH_CHECK_LABELS, HealthCheckEntryType } from "@/types";
 import dayjs from "dayjs";
 import {
   Apple,
@@ -63,6 +64,7 @@ import React, { ChangeEvent, useState } from "react";
 import { toast } from "sonner";
 import { DatePicker } from "antd";
 import isoWeek from "dayjs/plugin/isoWeek";
+import { useApp } from "@/providers";
 
 dayjs.extend(isoWeek);
 
@@ -90,15 +92,22 @@ type SearchResultItem = {
 };
 
 interface AddFoodLogProps {
-  meal: E_MEAL_TYPE;
+  meal?: E_MEAL_TYPE;
   onSuccess?: () => void;
   dayPlan?: string;
   length?: number;
 }
 
-const AddFoodLog = ({ meal, onSuccess, dayPlan, length }: AddFoodLogProps) => {
+const AddFoodLog = ({ meal, onSuccess, dayPlan }: AddFoodLogProps) => {
+  const { user } = useApp();
+  const auditLogs = user?.profile?.target?.audit_log || [];
+  const lastLog = [...auditLogs].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  )[0];
+
   const [isOpen, setIsOpen] = useState(false);
   const [addMethod, setAddMethod] = useState<AddMethod>("manual");
+  const [mealType, setMealType] = useState<E_MEAL_TYPE>(meal ?? E_MEAL_TYPE.BREAKFAST);
   const [formData, setFormData] = useState<FoodItemType>({
     name: "",
     calories: 0,
@@ -106,6 +115,7 @@ const AddFoodLog = ({ meal, onSuccess, dayPlan, length }: AddFoodLogProps) => {
     carbs: 0,
     fat: 0,
   });
+  const totalMeals = 4;
 
   const { mutate: createFood, isPending: isPendingCreate } = useCreateNewFoodLog();
   const { mutate: createFoodSuggestions, isPending: isPendingSuggestion } = useFoodSuggestion();
@@ -132,7 +142,7 @@ const AddFoodLog = ({ meal, onSuccess, dayPlan, length }: AddFoodLogProps) => {
       {
         name: formData.name,
         log_date: dayPlan ?? dayjs().format("YYYY-MM-DD"),
-        meal_type: meal,
+        meal_type: mealType,
         calories: formData.calories,
         protein: formData.protein ?? 0,
         carbs: formData.carbs ?? 0,
@@ -170,7 +180,7 @@ const AddFoodLog = ({ meal, onSuccess, dayPlan, length }: AddFoodLogProps) => {
 
   const handleAIAdd = () => {
     createFoodSuggestions(
-      { dayPlan: dayPlan ?? dayjs().format("YYYY-MM-DD"), meal_type: meal },
+      { dayPlan: dayPlan ?? dayjs().format("YYYY-MM-DD"), meal_type: "all" },
       {
         onSuccess: (data) => {
           toast.success("Đã tạo món ăn thành công.");
@@ -184,6 +194,38 @@ const AddFoodLog = ({ meal, onSuccess, dayPlan, length }: AddFoodLogProps) => {
         },
       }
     );
+  };
+
+  const formatHealthValue = (key: keyof HealthCheckEntryType, value: any) => {
+    if (value === undefined || value === null) return null;
+
+    switch (key) {
+      case "energyLevel":
+      case "sleepQuality":
+      case "stressLevel":
+      case "appetiteLevel":
+        return `${value}/10`;
+
+      case "bodyFatPercentage":
+        return `${value}%`;
+
+      case "weight":
+        return `${value} kg`;
+
+      case "waist":
+      case "chest":
+      case "hips":
+      case "biceps":
+      case "thighs":
+        return `${value} cm`;
+
+      case "date":
+      case "created_at":
+        return dayjs(value).format("DD/MM/YYYY");
+
+      default:
+        return value;
+    }
   };
 
   return (
@@ -211,7 +253,18 @@ const AddFoodLog = ({ meal, onSuccess, dayPlan, length }: AddFoodLogProps) => {
 
           <TabsContent value="manual" className="space-y-4">
             <div className="space-y-2">
-              <Label>{getMealLabel(meal)}</Label>
+              <Label>Bữa ăn</Label>
+              <Select value={mealType} onValueChange={(v: any) => setMealType(v)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={E_MEAL_TYPE.BREAKFAST}>Bữa sáng</SelectItem>
+                  <SelectItem value={E_MEAL_TYPE.LUNCH}>Bữa trưa</SelectItem>
+                  <SelectItem value={E_MEAL_TYPE.DINNER}>Bữa tối</SelectItem>
+                  <SelectItem value={E_MEAL_TYPE.SNACK}>Bữa phụ</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -270,9 +323,51 @@ const AddFoodLog = ({ meal, onSuccess, dayPlan, length }: AddFoodLogProps) => {
 
           <TabsContent value="ai" className="space-y-4">
             <div className="space-y-2">
-              <Label>{getMealLabel(meal)}</Label>
-              <p>AI sẽ phân tích đề xuất ra một món ăn phù hợp với bạn</p>
+              <Label>{getMealLabel(mealType)}</Label>
+              <p className="text-muted-foreground text-sm">
+                AI sẽ phân tích đề xuất ra thực đơn phù hợp với bạn cho cả ngày
+              </p>
             </div>
+
+            {lastLog && (
+              <div className="bg-muted/50 space-y-3 rounded-lg p-4 text-sm">
+                <p className="font-semibold">
+                  Tình trạng gần đây ({dayjs(lastLog.date).format("DD/MM/YYYY")})
+                </p>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {(Object.keys(HEALTH_CHECK_LABELS) as (keyof HealthCheckEntryType)[])
+                    .filter(
+                      (key) =>
+                        !["id", "created_at", "date"].includes(key) &&
+                        lastLog[key] !== undefined &&
+                        lastLog[key] !== null
+                    )
+                    .map((key) => (
+                      <div key={key} className="flex gap-1">
+                        <span className="text-muted-foreground">{HEALTH_CHECK_LABELS[key]}:</span>
+                        <span className="font-medium">{formatHealthValue(key, lastLog[key])}</span>
+                      </div>
+                    ))}
+                </div>
+
+                {lastLog.notes && (
+                  <div className="text-muted-foreground mt-2 text-xs italic">
+                    📝 Ghi chú: "{lastLog.notes}"
+                  </div>
+                )}
+
+                {lastLog.challenges && (
+                  <div className="mt-1 text-xs text-red-400">⚠️ Khó khăn: {lastLog.challenges}</div>
+                )}
+
+                {lastLog.achievements && (
+                  <div className="mt-1 text-xs text-green-400">
+                    🎯 Thành tựu: {lastLog.achievements}
+                  </div>
+                )}
+              </div>
+            )}
 
             <Button onClick={handleAIAdd} className="w-full" disabled={isPendingSuggestion}>
               {isPendingSuggestion ? "Đang xử lý..." : "Đề xuất"}
@@ -431,8 +526,11 @@ export function NutritionTracker() {
                       {logsForDay.length} món ăn đã ghi
                     </span>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold">{dayCalories} kcal</p>
+                  <div className="flex items-center gap-2">
+                    <div className="text-right">
+                      <p className="font-bold">{dayCalories} kcal</p>
+                    </div>
+                    {logsForDay.length === 0 && <AddFoodLog dayPlan={day} onSuccess={refetch} />}
                   </div>
                 </div>
               </AccordionTrigger>
@@ -458,9 +556,6 @@ export function NutritionTracker() {
                             <span className="text-muted-foreground ml-auto text-sm font-normal">
                               {mealCalories} kcal
                             </span>
-                            {logsForMeal?.length === 0 && (
-                              <AddFoodLog meal={meal} dayPlan={day} onSuccess={refetch} />
-                            )}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="pb-4">
