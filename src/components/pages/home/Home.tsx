@@ -29,6 +29,7 @@ import {
 import Link from "next/link";
 import { useGetUserInfo, useNutritionAnalytics, useWorkoutAnalytics } from "@/api/user/user.hook";
 import { DailyHealthCheckModal } from "@/components/DailyHealthCheckModal";
+import { getResultProfile } from "@/lib/utils/helpers";
 
 export function HomePage() {
   const { data: userData } = useGetUserInfo();
@@ -203,18 +204,7 @@ const HomeHeader = ({
   const currentProgress = startWeight - currentWeight;
   const weightProgress = progressToTarget !== 0 ? (currentProgress / progressToTarget) * 100 : 0;
 
-  const goalLabel =
-    {
-      "lose-weight": "Giảm cân",
-      "gain-muscle": "Tăng cơ",
-      maintain: "Duy trì",
-    }[profile.goal] || "Duy trì";
-  const goalColor =
-    {
-      "lose-weight": "text-green-500",
-      "gain-muscle": "text-blue-500",
-      maintain: "text-orange-500",
-    }[profile.goal] || "text-primary";
+  const { label: goalLabel, color: goalColor } = getResultProfile(profile.goal);
 
   // Comparison Logic
   const auditLogs = profile.auditLog || [];

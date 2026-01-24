@@ -70,3 +70,28 @@ export const hasAuditLogForToday = (auditLog?: HealthCheckEntryType[]): boolean 
 
   return auditLog.some((entry) => entry.date === today);
 };
+
+export function getResultProfile(goal?: string) {
+  switch (goal) {
+    case "lose-weight":
+      return {
+        label: "Giảm cân",
+        color: "text-green-500",
+      };
+    case "gain-muscle":
+      return {
+        label: "Tăng cơ",
+        color: "text-blue-500",
+      };
+    case "maintain":
+      return {
+        label: "Duy trì",
+        color: "text-orange-500",
+      };
+    default:
+      return {
+        label: "Duy trì",
+        color: "text-primary",
+      };
+  }
+}
