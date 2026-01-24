@@ -1,7 +1,20 @@
 "use client";
-import React, { useMemo } from "react";
-
-import { Flame, Target, TrendingDown, TrendingUp, Droplet, Apple, Dumbbell } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import {
+  Flame,
+  Target,
+  TrendingDown,
+  TrendingUp,
+  Droplet,
+  Apple,
+  Dumbbell,
+  Zap,
+  Calendar,
+  Goal as GoalIcon,
+  Trophy,
+  Scale,
+  Activity,
+} from "lucide-react";
 import { CalorieRequirements, UserProfile } from "@/types";
 import { calculateCalorieRequirements } from "@/lib/utils/calculations";
 import {
@@ -15,11 +28,13 @@ import {
 } from "@/components/ui";
 import Link from "next/link";
 import { useGetUserInfo, useNutritionAnalytics, useWorkoutAnalytics } from "@/api/user/user.hook";
+import { DailyHealthCheckModal } from "@/components/DailyHealthCheckModal";
 
 export function HomePage() {
   const { data: userData } = useGetUserInfo();
   const { data: nutritionData } = useNutritionAnalytics(1);
   const { data: workoutData } = useWorkoutAnalytics(1);
+  const [showWeeklyCheck, setShowWeeklyCheck] = useState(false);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -34,9 +49,14 @@ export function HomePage() {
       height: p.height_cm,
       activityLevel: p.activity_level as any,
       goal: p.target.goal as any,
+      targetWeight: p.target.target_weight,
+      targetDate: p.target.target_date,
+      // Pass raw audit_log for HomeHeader to process
+      auditLog: p.target.audit_log,
       createdAt: "",
       updatedAt: "",
-    };
+      name: userData.user.name,
+    } as any;
   }, [userData]);
 
   const requirements = useMemo(() => {
@@ -84,94 +104,12 @@ export function HomePage() {
 
   const waterProgress = 0; // Water tracking might be separate or missing in current API
 
-  const motivationMessage = "Hãy bắt đầu ngày mới đầy năng lượng!";
-
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1>Bảng điều khiển</h1>
-        <p className="text-muted-foreground">
-          Chào {profile?.gender === "male" ? "anh" : "chị"} {userData?.user?.name}!{" "}
-          {motivationMessage}
-        </p>
-      </div>
+      {/* Header with Comparison */}
+      <HomeHeader profile={profile} setShowWeeklyCheck={setShowWeeklyCheck} />
 
       {/* Main Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm">Calo còn lại</CardTitle>
-            <Flame className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl">{Math.max(0, Math.round(caloriesRemaining))}</div>
-            <p className="text-muted-foreground text-xs">
-              Mục tiêu: {requirements.targetCalories} kcal
-            </p>
-            <Progress value={Math.min(100, Math.max(0, caloriesProgress))} className="mt-2" />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm">Protein</CardTitle>
-            <Apple className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl">{Math.round(proteinCurrent)}g</div>
-            <p className="text-muted-foreground text-xs">Mục tiêu: {requirements.proteinGrams}g</p>
-            <Progress value={Math.min(100, proteinProgress)} className="mt-2" />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm">Vận động</CardTitle>
-            <Dumbbell className="h-4 w-4 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl">{todayWorkout?.duration_min || 0} phút</div>
-            <p className="text-muted-foreground text-xs">Đốt cháy: {caloriesBurned} kcal</p>
-            <Progress value={0} className="mt-2" />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Calorie Balance */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Cân bằng Calo hôm nay</CardTitle>
-          <CardDescription>Tổng quan về calo nạp vào và tiêu thụ</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-green-500" />
-                <span>Calo nạp vào</span>
-              </div>
-              <span className="text-xl">{caloriesIn} kcal</span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <TrendingDown className="h-5 w-5 text-red-500" />
-                <span>Calo đốt cháy</span>
-              </div>
-              <span className="text-xl">{caloriesBurned} kcal</span>
-            </div>
-
-            <div className="flex items-center justify-between border-t pt-4">
-              <div className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-blue-500" />
-                <span>Chênh lệch</span>
-              </div>
-              <span className="text-xl">{Math.round(caloriesIn - caloriesBurned)} kcal</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Macros Breakdown */}
       <Card>
@@ -242,6 +180,257 @@ export function HomePage() {
           </CardContent>
         </Link>
       </div>
+
+      <DailyHealthCheckModal isOpen={showWeeklyCheck} onClose={() => setShowWeeklyCheck(false)} />
     </div>
   );
 }
+
+const HomeHeader = ({
+  profile,
+  setShowWeeklyCheck,
+}: {
+  profile: any;
+  setShowWeeklyCheck: (v: boolean) => void;
+}) => {
+  if (!profile) return null;
+
+  const currentWeight = profile.weight;
+  const targetWeight = profile.targetWeight || currentWeight;
+  const startWeight = currentWeight; // Placeholder, ideally should come from initial profile or first audit log
+  const weightChange = currentWeight - startWeight;
+  const progressToTarget = startWeight - targetWeight;
+  const currentProgress = startWeight - currentWeight;
+  const weightProgress = progressToTarget !== 0 ? (currentProgress / progressToTarget) * 100 : 0;
+
+  const goalLabel =
+    {
+      "lose-weight": "Giảm cân",
+      "gain-muscle": "Tăng cơ",
+      maintain: "Duy trì",
+    }[profile.goal] || "Duy trì";
+  const goalColor =
+    {
+      "lose-weight": "text-green-500",
+      "gain-muscle": "text-blue-500",
+      maintain: "text-orange-500",
+    }[profile.goal] || "text-primary";
+
+  // Comparison Logic
+  const auditLogs = profile.auditLog || [];
+  const sortedLogs = [...auditLogs].sort(
+    (a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  const comparisonData =
+    sortedLogs.length >= 2
+      ? {
+          newest: sortedLogs[0],
+          previous: sortedLogs[1],
+          changes: {
+            weight: sortedLogs[0].weight - sortedLogs[1].weight,
+            bodyFat:
+              (sortedLogs[0].bodyFatPercentage || 0) - (sortedLogs[1].bodyFatPercentage || 0),
+            waist: (sortedLogs[0].waist || 0) - (sortedLogs[1].waist || 0),
+          },
+        }
+      : null;
+
+  return (
+    <>
+      {/* Hero Banner with Slogan */}
+      <Card className="from-primary/10 via-primary/5 to-background border-primary/20 bg-gradient-to-r">
+        <CardContent className="pt-6">
+          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+            <div className="flex-1 space-y-2">
+              <div className="flex items-center gap-2">
+                <Zap className="text-primary h-6 w-6" />
+                <h2 className="text-2xl">Chào {profile?.name}!</h2>
+              </div>
+              <p className="text-muted-foreground text-lg">
+                <strong>FitTracker AI</strong> - Đồng hành cùng bạn trên hành trình chinh phục mục
+                tiêu
+              </p>
+              <p className="text-primary text-sm italic">
+                &quot;Mỗi ngày một chút tiến bộ, mỗi tuần một bước xa hơn - Bạn đang làm rất tốt!
+                💪&quot;
+              </p>
+            </div>
+            <Button onClick={() => setShowWeeklyCheck(true)} size="lg" className="gap-2">
+              <Calendar className="h-5 w-5" />
+              Cập nhật thể trạng tuần
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Goal Highlight */}
+      <Card className="border-primary/30 border-2">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`bg-primary/10 rounded-full p-3`}>
+                <GoalIcon className={`h-6 w-6 ${goalColor}`} />
+              </div>
+              <div>
+                <CardTitle>Mục tiêu: {goalLabel}</CardTitle>
+                <CardDescription>
+                  {profile.targetDate && (
+                    <>Hoàn thành trước {new Date(profile.targetDate).toLocaleDateString("vi-VN")}</>
+                  )}
+                </CardDescription>
+              </div>
+            </div>
+            <Trophy className="h-8 w-8 text-yellow-500" />
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div className="bg-muted/50 rounded-lg p-4 text-center">
+              <Scale className="mx-auto mb-2 h-5 w-5 text-blue-500" />
+              <div className="text-2xl">{currentWeight}kg</div>
+              <p className="text-muted-foreground text-xs">Hiện tại</p>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-4 text-center">
+              <Target className="mx-auto mb-2 h-5 w-5 text-green-500" />
+              <div className="text-2xl">{targetWeight}kg</div>
+              <p className="text-muted-foreground text-xs">Mục tiêu</p>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-4 text-center">
+              <Activity className="mx-auto mb-2 h-5 w-5 text-purple-500" />
+              <div className="text-2xl">{Math.abs(currentWeight - targetWeight).toFixed(1)}kg</div>
+              <p className="text-muted-foreground text-xs">Còn lại</p>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-4 text-center">
+              <TrendingUp className="mx-auto mb-2 h-5 w-5 text-orange-500" />
+              <div className="text-2xl">
+                {Math.min(100, Math.max(0, weightProgress)).toFixed(0)}%
+              </div>
+              <p className="text-muted-foreground text-xs">Tiến độ</p>
+            </div>
+          </div>
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-sm">Tiến độ mục tiêu</span>
+              <span className="text-muted-foreground text-sm">
+                {weightChange > 0 ? "-" : "+"}
+                {Math.abs(weightChange).toFixed(1)}kg
+              </span>
+            </div>
+            <Progress value={Math.min(100, Math.max(0, weightProgress))} className="h-3" />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recent Progress Comparison */}
+      {comparisonData && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Sự thay đổi gần đây</CardTitle>
+            <CardDescription>
+              So sánh giữa {new Date(comparisonData.previous.date).toLocaleDateString("vi-VN")} và{" "}
+              {new Date(comparisonData.newest.date).toLocaleDateString("vi-VN")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Key Metrics Comparison */}
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              <div className="bg-muted/50 rounded-lg p-4 text-center">
+                <div className="text-muted-foreground mb-1 text-sm">Cân nặng</div>
+                <div className="text-xl">{comparisonData.newest.weight}kg</div>
+                <div
+                  className={`flex items-center justify-center gap-1 text-sm ${
+                    comparisonData.changes.weight < 0 ? "text-green-500" : "text-red-500"
+                  }`}
+                >
+                  {comparisonData.changes.weight < 0 ? "↓" : "↑"}{" "}
+                  {Math.abs(comparisonData.changes.weight).toFixed(1)}kg
+                </div>
+              </div>
+              <div className="bg-muted/50 rounded-lg p-4 text-center">
+                <div className="text-muted-foreground mb-1 text-sm">Body Fat</div>
+                <div className="text-xl">{comparisonData.newest.bodyFatPercentage}%</div>
+                <div
+                  className={`flex items-center justify-center gap-1 text-sm ${
+                    comparisonData.changes.bodyFat < 0 ? "text-green-500" : "text-red-500"
+                  }`}
+                >
+                  {comparisonData.changes.bodyFat < 0 ? "↓" : "↑"}{" "}
+                  {Math.abs(comparisonData.changes.bodyFat).toFixed(1)}%
+                </div>
+              </div>
+              <div className="bg-muted/50 rounded-lg p-4 text-center">
+                <div className="text-muted-foreground mb-1 text-sm">Eo</div>
+                <div className="text-xl">{comparisonData.newest.waist}cm</div>
+                <div
+                  className={`flex items-center justify-center gap-1 text-sm ${
+                    comparisonData.changes.waist < 0 ? "text-green-500" : "text-red-500"
+                  }`}
+                >
+                  {comparisonData.changes.waist < 0 ? "↓" : "↑"}{" "}
+                  {Math.abs(comparisonData.changes.waist).toFixed(1)}cm
+                </div>
+              </div>
+              <div className="bg-muted/50 rounded-lg p-4 text-center">
+                <div className="text-muted-foreground mb-1 text-sm">Năng lượng</div>
+                <div className="text-xl">{comparisonData.newest.energyLevel}/5</div>
+                <div
+                  className={`flex items-center justify-center gap-1 text-sm ${
+                    comparisonData.newest.energyLevel - comparisonData.previous.energyLevel >= 0
+                      ? "text-green-500"
+                      : "text-red-500"
+                  }`}
+                >
+                  {comparisonData.newest.energyLevel - comparisonData.previous.energyLevel >= 0
+                    ? "↑"
+                    : "↓"}{" "}
+                  {Math.abs(
+                    comparisonData.newest.energyLevel - comparisonData.previous.energyLevel
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Notes and Achievements */}
+            {(comparisonData.newest.achievements || comparisonData.newest.challenges) && (
+              <div className="space-y-3 border-t pt-4">
+                {comparisonData.newest.achievements && (
+                  <div>
+                    <div className="mb-1 flex items-center gap-2">
+                      <Trophy className="h-4 w-4 text-yellow-500" />
+                      <span className="text-sm font-medium">Thành tựu</span>
+                    </div>
+                    <p className="text-muted-foreground pl-6 text-sm">
+                      {comparisonData.newest.achievements}
+                    </p>
+                  </div>
+                )}
+                {comparisonData.newest.challenges && (
+                  <div>
+                    <div className="mb-1 flex items-center gap-2">
+                      <Target className="h-4 w-4 text-orange-500" />
+                      <span className="text-sm font-medium">Khó khăn</span>
+                    </div>
+                    <p className="text-muted-foreground pl-6 text-sm">
+                      {comparisonData.newest.challenges}
+                    </p>
+                  </div>
+                )}
+                {comparisonData.newest.notes && (
+                  <div>
+                    <div className="mb-1 flex items-center gap-2">
+                      <Zap className="h-4 w-4 text-blue-500" />
+                      <span className="text-sm font-medium">Ghi chú</span>
+                    </div>
+                    <p className="text-muted-foreground pl-6 text-sm">
+                      {comparisonData.newest.notes}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </>
+  );
+};

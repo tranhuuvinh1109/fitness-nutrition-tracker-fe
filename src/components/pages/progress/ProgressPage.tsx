@@ -57,11 +57,47 @@ export function ProgressTracker() {
       };
     }) || [];
 
-  const workoutData =
-    workoutStats?.map((stat) => ({
-      date: dayjs(stat.day).format("DD/MM"),
-      "Phút tập": stat.duration_min,
-    })) || [];
+  // Process workout data
+  const workoutData = React.useMemo(() => {
+    if (!workoutStats) return [];
+
+    const groupedData = workoutStats.reduce(
+      (acc, stat) => {
+        const date = dayjs(stat.day).format("DD/MM");
+        if (!acc[date]) {
+          acc[date] = {
+            date,
+            completed: 0,
+            skipped: 0,
+            planned: 0,
+            unknown: 0,
+          };
+        }
+
+        // Map status to field
+        switch (stat.status) {
+          case 1: // COMPLETED
+            acc[date].completed += stat.duration_min;
+            break;
+          case 2: // SKIPPED
+            acc[date].skipped += stat.duration_min;
+            break;
+          case 0: // PLANNED
+            acc[date].planned += stat.duration_min;
+            break;
+          default:
+            acc[date].unknown += stat.duration_min;
+        }
+        return acc;
+      },
+      {} as Record<
+        string,
+        { date: string; completed: number; skipped: number; planned: number; unknown: number }
+      >
+    );
+
+    return Object.values(groupedData);
+  }, [workoutStats]);
 
   const todayStr = dayjs().format("YYYY-MM-DD");
   const todayStats = nutritionStats?.find((s) => s.day === todayStr) || {
@@ -204,7 +240,9 @@ export function ProgressTracker() {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="Phút tập" fill="#3b82f6" />
+                  <Bar dataKey="completed" name="Đã hoàn thành" stackId="a" fill="#10b981" />
+                  <Bar dataKey="skipped" name="Đã bỏ qua" stackId="a" fill="#ef4444" />
+                  <Bar dataKey="planned" name="Đã lên lịch" stackId="a" fill="#3b82f6" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>

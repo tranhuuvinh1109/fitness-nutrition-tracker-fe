@@ -47,8 +47,6 @@ export const useNutritionAnalytics = (mode: number) => {
   return useQuery({
     queryKey: [QUERY_KEYS.NUTRITION_ANALYTICS, mode],
     queryFn: () => getNutritionAnalytics(mode),
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
   });
 };
 
@@ -56,8 +54,6 @@ export const useWorkoutAnalytics = (mode: number) => {
   return useQuery({
     queryKey: [QUERY_KEYS.WORKOUT_ANALYTICS, mode],
     queryFn: () => getWorkoutAnalytics(mode),
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
   });
 };
 

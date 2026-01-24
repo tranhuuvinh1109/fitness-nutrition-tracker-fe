@@ -72,6 +72,7 @@ export type WorkoutAnalyticsType = {
   calo: number;
   day: string;
   duration_min: number;
+  status: number;
 };
 
 export type AskAIRequest = {
