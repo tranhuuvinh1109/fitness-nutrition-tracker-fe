@@ -29,7 +29,7 @@ import {
 import Link from "next/link";
 import { useGetUserInfo, useNutritionAnalytics, useWorkoutAnalytics } from "@/api/user/user.hook";
 import { DailyHealthCheckModal } from "@/components/DailyHealthCheckModal";
-import { getResultProfile } from "@/lib/utils/helpers";
+import { getResultProfile, hasAuditLogForToday } from "@/lib/utils/helpers";
 
 export function HomePage() {
   const { data: userData } = useGetUserInfo();
@@ -225,6 +225,8 @@ const HomeHeader = ({
         }
       : null;
 
+  const isHasAuditLogForToday = hasAuditLogForToday(auditLogs);
+
   return (
     <>
       {/* Hero Banner with Slogan */}
@@ -245,10 +247,12 @@ const HomeHeader = ({
                 💪&quot;
               </p>
             </div>
-            <Button onClick={() => setShowWeeklyCheck(true)} size="lg" className="gap-2">
-              <Calendar className="h-5 w-5" />
-              Cập nhật thể trạng tuần
-            </Button>
+            {!isHasAuditLogForToday && (
+              <Button onClick={() => setShowWeeklyCheck(true)} size="lg" className="gap-2">
+                <Calendar className="h-5 w-5" />
+                Cập nhật thể trạng tuần
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

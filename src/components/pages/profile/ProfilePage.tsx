@@ -34,6 +34,7 @@ const ACTIVITY_TO_WORKOUT_DAYS: Record<UserProfileType["activity_level"], number
 export function UserProfilePage() {
   const { user, setUser } = useApp();
   const { mutate: updateProfile, isPending } = useUpdateProfile();
+  const [initialized, setInitialized] = useState(false);
 
   const [formData, setFormData] = useState<UserProfileType>({
     user_id: "",
@@ -83,7 +84,7 @@ export function UserProfilePage() {
     }
 
     updateProfile(formData, {
-      onSuccess: (data) => {
+      onSuccess: (data: any) => {
         setUser((pre) => {
           if (!pre) return;
           return { ...pre, profile: data };
@@ -100,25 +101,32 @@ export function UserProfilePage() {
       : 0;
 
   useEffect(() => {
-    if (!user || !user?.profile) return;
+    if (!user?.profile) return;
 
-    setFormData({
-      user_id: user.id ?? "",
-      age: user.profile.age,
-      gender: user.profile.gender,
-      weight_kg: user.profile.weight_kg,
-      height_cm: user.profile.height_cm,
-      activity_level: user.profile.activity_level,
-      bmi: `${bmi}`,
-      target: user.profile.target ?? {
-        daily_calories: 0,
-        goal: "",
-        target_weight: 0,
-        weekly_workout_days: 0,
-      },
-    });
-  }, [user]);
+    const hasUserGoal = !!user.profile.target?.goal;
+    const hasFormGoal = !!formData.target.goal;
 
+    // Initialize if not done yet, OR if we missed the data previously (race condition fix)
+    if (!initialized || (!hasFormGoal && hasUserGoal)) {
+      setFormData({
+        user_id: user.id ?? "",
+        age: user.profile.age,
+        gender: user.profile.gender,
+        weight_kg: user.profile.weight_kg,
+        height_cm: user.profile.height_cm,
+        activity_level: user.profile.activity_level,
+        bmi: `${calculateBMI(user.profile.weight_kg, user.profile.height_cm)}`,
+        target: {
+          daily_calories: user.profile.target?.daily_calories ?? 0,
+          goal: user.profile.target?.goal ?? "",
+          target_weight: user.profile.target?.target_weight ?? 0,
+          weekly_workout_days: user.profile.target?.weekly_workout_days ?? 0,
+        },
+      });
+
+      setInitialized(true);
+    }
+  }, [user, initialized, formData.target.goal]);
   return (
     <>
       <div className="mx-auto max-w-2xl space-y-6">
@@ -235,8 +243,7 @@ export function UserProfilePage() {
               <div className="space-y-2">
                 <Label htmlFor="goal">Mục tiêu chính</Label>
                 <Select
-                  value={formData.target.goal}
-                  defaultValue={formData.target.goal}
+                  value={formData?.target?.goal}
                   onValueChange={(v) => updateTargetField("goal", v)}
                 >
                   <SelectTrigger>
@@ -251,20 +258,17 @@ export function UserProfilePage() {
                 </Select>
               </div>
 
-              {formData.target.goal !== "maintain" && (
-                <div className="space-y-2">
-                  <Label htmlFor="targetWeight">Cân nặng mục tiêu (kg)</Label>
-                  <Input
-                    type="number"
-                    value={formData.target.target_weight}
-                    onChange={(e) => updateTargetField("target_weight", Number(e.target.value))}
-                    min="30"
-                    max="300"
-                    step="0.1"
-                  />
-                </div>
-              )}
-
+              <div className="space-y-2">
+                <Label htmlFor="targetWeight">Cân nặng mục tiêu (kg)</Label>
+                <Input
+                  type="number"
+                  value={formData.target.target_weight}
+                  onChange={(e) => updateTargetField("target_weight", Number(e.target.value))}
+                  min="30"
+                  max="300"
+                  step="0.1"
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="dailyCalories">Lượng calo mục tiêu mỗi ngày (kcal)</Label>
                 <Input
