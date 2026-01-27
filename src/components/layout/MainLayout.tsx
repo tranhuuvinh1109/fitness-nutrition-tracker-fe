@@ -12,7 +12,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
   const [isHealthCheckOpen, setIsHealthCheckOpen] = useState(false);
 
   useEffect(() => {
-    if (!user || !user.profile) return;
+    if (!user || !user?.profile?.target?.goal) return;
 
     const hasLoggedToday = hasAuditLogForCurrentWeek(user?.profile?.target?.audit_log);
 

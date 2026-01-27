@@ -31,18 +31,20 @@ import {
 } from "@/components/ui";
 import { useGetUserInfo, useNutritionAnalytics, useWorkoutAnalytics } from "@/api/user/user.hook";
 import dayjs from "dayjs";
+import { getResultProfile } from "@/lib/utils/helpers";
+import { useApp } from "@/providers";
 
 export function ProgressTracker() {
   const [timeRange, setTimeRange] = React.useState<"week" | "month">("week");
   const mode = timeRange === "week" ? 7 : 30;
 
-  const { data: userInfo, isLoading: isLoadingUser } = useGetUserInfo();
+  const { user } = useApp();
   const { data: nutritionStats, isLoading: isLoadingNutrition } = useNutritionAnalytics(mode);
   const { data: workoutStats, isLoading: isLoadingWorkout } = useWorkoutAnalytics(mode);
 
-  const isLoading = isLoadingUser || isLoadingNutrition || isLoadingWorkout;
+  const isLoading = isLoadingNutrition || isLoadingWorkout;
 
-  const profile = userInfo?.user.profile;
+  const profile = user?.profile;
   const target = profile?.target;
 
   // Prepare chart data
@@ -118,11 +120,7 @@ export function ProgressTracker() {
   const averageCalories = Math.round(totalCalories / (nutritionStats?.length || 1));
   const averageWorkout = Math.round(totalWorkoutMinutes / (workoutStats?.length || 1));
 
-  const goalLabels: Record<string, string> = {
-    "lose-weight": "Giảm cân",
-    "gain-muscle": "Tăng cơ",
-    maintain: "Duy trì",
-  };
+  const goalLabels = getResultProfile(target?.goal || "");
 
   return (
     <div className="space-y-6">
@@ -180,7 +178,7 @@ export function ProgressTracker() {
             <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{goalLabels[target?.goal || ""] || "Duy trì"}</div>
+            <div className="text-2xl font-bold">{goalLabels.label}</div>
             {target?.target_weight && (
               <p className="text-muted-foreground text-xs">
                 Cân nặng mục tiêu: {target.target_weight} kg

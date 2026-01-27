@@ -31,6 +31,12 @@ const ACTIVITY_TO_WORKOUT_DAYS: Record<UserProfileType["activity_level"], number
   high: 6,
 };
 
+const WORKOUT_DAYS_TO_ACTIVITY: Record<number, UserProfileType["activity_level"]> = {
+  2: "low",
+  4: "medium",
+  6: "high",
+};
+
 export function UserProfilePage() {
   const { user, setUser } = useApp();
   const { mutate: updateProfile, isPending } = useUpdateProfile();
@@ -130,6 +136,8 @@ export function UserProfilePage() {
       setInitialized(true);
     }
   }, [user, initialized, formData.target.goal]);
+
+  console.log(user, formData);
   return (
     <>
       <div className="mx-auto max-w-2xl space-y-6">
@@ -218,7 +226,7 @@ export function UserProfilePage() {
             </CardHeader>
             <CardContent>
               <Select
-                value={formData.activity_level}
+                value={WORKOUT_DAYS_TO_ACTIVITY[formData.target?.weekly_workout_days]}
                 onValueChange={(v) => {
                   updateField("activity_level", v);
                   const workoutDays = ACTIVITY_TO_WORKOUT_DAYS[v];

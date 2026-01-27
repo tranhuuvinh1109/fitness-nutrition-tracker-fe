@@ -30,9 +30,10 @@ import Link from "next/link";
 import { useGetUserInfo, useNutritionAnalytics, useWorkoutAnalytics } from "@/api/user/user.hook";
 import { DailyHealthCheckModal } from "@/components/DailyHealthCheckModal";
 import { getResultProfile, hasAuditLogForToday } from "@/lib/utils/helpers";
+import { useApp } from "@/providers";
 
 export function HomePage() {
-  const { data: userData } = useGetUserInfo();
+  const { user } = useApp();
   const { data: nutritionData } = useNutritionAnalytics(1);
   const { data: workoutData } = useWorkoutAnalytics(1);
   const [showWeeklyCheck, setShowWeeklyCheck] = useState(false);
@@ -40,8 +41,8 @@ export function HomePage() {
   const today = new Date().toISOString().split("T")[0];
 
   const profile: UserProfile | null = useMemo(() => {
-    if (!userData?.user?.profile) return null;
-    const p = userData.user.profile;
+    if (!user?.profile?.target?.goal) return null;
+    const p = user.profile;
     return {
       id: p.user_id,
       age: p.age,
@@ -56,9 +57,9 @@ export function HomePage() {
       auditLog: p.target.audit_log,
       createdAt: "",
       updatedAt: "",
-      name: userData.user.name,
+      name: user.name,
     } as any;
-  }, [userData]);
+  }, [user]);
 
   const requirements = useMemo(() => {
     if (!profile)

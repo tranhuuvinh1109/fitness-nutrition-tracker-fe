@@ -112,10 +112,15 @@ export function getResultProfile(goal?: string) {
         label: "Tăng cân",
         color: "text-orange-500",
       };
-    default:
+    case "maintain":
       return {
         label: "Duy trì",
         color: "text-primary",
+      };
+    default:
+      return {
+        label: "",
+        color: "text-gray-500",
       };
   }
 }
