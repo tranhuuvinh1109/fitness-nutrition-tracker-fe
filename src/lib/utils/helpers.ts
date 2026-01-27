@@ -71,6 +71,30 @@ export const hasAuditLogForToday = (auditLog?: HealthCheckEntryType[]): boolean 
   return auditLog.some((entry) => entry.date === today);
 };
 
+export const hasAuditLogForCurrentWeek = (auditLog?: HealthCheckEntryType[]): boolean => {
+  if (!auditLog || auditLog.length === 0) {
+    return false;
+  }
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dayOfWeek = today.getDay(); // 0 (Sun) to 6 (Sat)
+  const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 0 (Mon) to 6 (Sun)
+
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - daysSinceMonday);
+
+  const sunday = new Date(today);
+  sunday.setDate(today.getDate() + (6 - daysSinceMonday));
+
+  const startOfWeek = monday.toISOString().split("T")[0];
+  const endOfWeek = sunday.toISOString().split("T")[0];
+
+  return auditLog.some((entry) => {
+    return entry.date >= startOfWeek && entry.date <= endOfWeek;
+  });
+};
+
 export function getResultProfile(goal?: string) {
   switch (goal) {
     case "lose-weight":
@@ -83,9 +107,9 @@ export function getResultProfile(goal?: string) {
         label: "Tăng cơ",
         color: "text-blue-500",
       };
-    case "maintain":
+    case "gain-weight":
       return {
-        label: "Duy trì",
+        label: "Tăng cân",
         color: "text-orange-500",
       };
     default:

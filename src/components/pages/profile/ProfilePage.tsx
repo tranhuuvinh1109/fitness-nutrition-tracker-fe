@@ -52,6 +52,11 @@ export function UserProfilePage() {
     },
   });
 
+  const bmi =
+    formData.height_cm && formData.weight_kg
+      ? calculateBMI(formData.weight_kg, formData.height_cm)
+      : 0;
+
   const updateField = <K extends keyof UserProfileType>(field: K, value: UserProfileType[K]) => {
     setFormData((prev) => ({
       ...prev,
@@ -83,22 +88,20 @@ export function UserProfilePage() {
       return;
     }
 
-    updateProfile(formData, {
-      onSuccess: (data: any) => {
-        setUser((pre) => {
-          if (!pre) return;
-          return { ...pre, profile: data };
-        });
-        toast.success("Cập nhật thông tin thành công.");
-      },
-      onError: () => toast.error("Cập nhật thông tin thất bại."),
-    });
+    updateProfile(
+      { ...formData, bmi: `${bmi}` },
+      {
+        onSuccess: (data: any) => {
+          setUser((pre) => {
+            if (!pre) return;
+            return { ...pre, profile: data };
+          });
+          toast.success("Cập nhật thông tin thành công.");
+        },
+        onError: () => toast.error("Cập nhật thông tin thất bại."),
+      }
+    );
   };
-
-  const bmi =
-    formData.height_cm && formData.weight_kg
-      ? calculateBMI(formData.weight_kg, formData.height_cm)
-      : 0;
 
   useEffect(() => {
     if (!user?.profile) return;

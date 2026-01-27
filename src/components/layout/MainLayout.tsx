@@ -2,7 +2,7 @@ import { PropsWithChildren, useEffect, useState } from "react";
 import { Header } from "../header";
 import { Toaster } from "sonner";
 import { DailyHealthCheckModal } from "../DailyHealthCheckModal";
-import { hasAuditLogForToday } from "@/lib/utils/helpers";
+import { hasAuditLogForCurrentWeek } from "@/lib/utils/helpers";
 import { useApp } from "@/providers";
 
 type MainLayoutProps = PropsWithChildren;
@@ -12,9 +12,9 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
   const [isHealthCheckOpen, setIsHealthCheckOpen] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !user.profile) return;
 
-    const hasLoggedToday = hasAuditLogForToday(user?.profile?.target?.audit_log);
+    const hasLoggedToday = hasAuditLogForCurrentWeek(user?.profile?.target?.audit_log);
 
     if (!hasLoggedToday) {
       setIsHealthCheckOpen(true);
